@@ -40,18 +40,16 @@
 
         const THOMA_RED = "#BF0D3E";
 
-        // MSAL Konfiguration - STRENG AUF REDIRECT OPTIMIERT
+        // MSAL Konfiguration - STRENG AUF POPUP OPTIMIERT (Ohne Loop-Gefahr)
         const msalConfig = {
             auth: {
                 clientId: MS_CONFIG.clientId,
                 authority: `https://login.microsoftonline.com/${MS_CONFIG.tenantId}`,
                 redirectUri: window.location.origin,
-                // Verhindert zusätzliche Seiten-Neuladevorgänge, die den Token löschen könnten
-                navigateToLoginRequestUrl: false 
             },
             cache: {
-                cacheLocation: "localStorage", // Wichtig für Redirects!
-                storeAuthStateInCookie: false,
+                cacheLocation: "localStorage",
+                storeAuthStateInCookie: true,
             }
         };
         const msalInstance = new msal.PublicClientApplication(msalConfig);
@@ -87,59 +85,38 @@
             useEffect(() => {
                 const initApp = async () => {
                     try {
-                        setDebugMsg("1. Initialisiere Microsoft Schnittstelle...");
+                        setDebugMsg("Initialisiere Microsoft Schnittstelle...");
                         await msalInstance.initialize();
 
-                        // 1. Prüfen: Kommen wir gerade von einem Redirect zurück?
-                        setDebugMsg("2. Prüfe auf Rückkehr vom Login...");
-                        const redirectResponse = await msalInstance.handleRedirectPromise();
-                        
-                        if (redirectResponse && redirectResponse.accessToken) {
-                            // ERFOLG! Wir haben den Token direkt aus der Weiterleitung.
-                            setDebugMsg("3. Login erfolgreich! Lade Daten...");
-                            msalInstance.setActiveAccount(redirectResponse.account);
-                            setUser({ userDetails: redirectResponse.account.username });
-                            await fetchSharePointData(redirectResponse.account.username, redirectResponse.accessToken);
-                            return; // WICHTIG: Hier abbrechen, sonst läuft der Code weiter.
-                        }
-
-                        // 2. Prüfen: Haben wir einen gültigen Token im lokalen Speicher (LocalStorage)?
-                        setDebugMsg("4. Prüfe lokale Speicherung...");
-                        const accounts = msalInstance.getAllAccounts();
-                        if (accounts.length > 0) {
-                            msalInstance.setActiveAccount(accounts[0]);
-                            try {
-                                const silentResponse = await msalInstance.acquireTokenSilent({
-                                    scopes: ["Sites.Read.All"],
-                                    account: accounts[0]
-                                });
-                                setDebugMsg("5. Bekannter Nutzer gefunden! Lade Daten...");
-                                setUser({ userDetails: accounts[0].username });
-                                await fetchSharePointData(accounts[0].username, silentResponse.accessToken);
-                                return; // WICHTIG: Abbrechen, wir sind fertig.
-                            } catch (e) {
-                                console.log("Lokaler Token ist abgelaufen.");
-                            }
-                        }
-
-                        // 3. KEIN TOKEN VORHANDEN! 
-                        // Wir prüfen noch kurz, ob Azure Static Web Apps den Namen kennt (nur für die Anzeige).
+                        // 1. Prüfen ob durch Azure SWA schon ein Name bekannt ist
+                        let swaUserEmail = null;
                         try {
                             const authUrl = new URL('/.auth/me', window.location.origin).toString();
                             const response = await fetch(authUrl);
                             if (response.ok) {
                                 const payload = await response.json();
-                                if (payload.clientPrincipal) setUser({ userDetails: payload.clientPrincipal.userDetails });
+                                if (payload.clientPrincipal) swaUserEmail = payload.clientPrincipal.userDetails;
                             }
                         } catch (e) {}
 
-                        // Zeige den Button an, damit der Nutzer aktiv klicken kann.
-                        setDebugMsg("6. Warten auf Benutzerklick...");
-                        setAuthRequired(true);
-                        setLoading(false);
-
+                        // 2. Prüfen ob wir lokal schon ein Microsoft-Zertifikat haben
+                        const accounts = msalInstance.getAllAccounts();
+                        
+                        if (accounts.length > 0) {
+                            msalInstance.setActiveAccount(accounts[0]);
+                            const email = swaUserEmail || accounts[0].username;
+                            setUser({ userDetails: email });
+                            
+                            // Versuchen wir leise die Daten zu holen
+                            await fetchSharePointData(email);
+                        } else {
+                            // WICHTIG: Kein Account da -> Wir stoppen hier strikt und erzwingen keine Weiterleitung!
+                            setUser({ userDetails: swaUserEmail || "Gast-Nutzer" });
+                            setAuthRequired(true);
+                            setLoading(false);
+                        }
                     } catch (err) {
-                        console.error("Schwerer Initialisierungsfehler:", err);
+                        console.error("Init-Fehler:", err);
                         setDebugMsg("Fehler beim Starten der App.");
                         setAuthRequired(true);
                         setLoading(false);
@@ -149,27 +126,60 @@
             }, []);
 
             // ==========================================
-            // SAUBERER REDIRECT LOGIN (Keine Popups!)
+            // SAUBERER POPUP LOGIN (100% Sicher vor Loops)
             // ==========================================
-            const handleManualLogin = async () => {
-                setLoading(true);
-                setDebugMsg("Leite zu Microsoft um...");
-                try {
-                    await msalInstance.loginRedirect({
-                        scopes: ["Sites.Read.All"]
+            const handleManualLogin = () => {
+                // Keine Ladescreens DAVOR, sonst blockiert der Browser das Popup!
+                setDebugMsg("Öffne Anmeldefenster...");
+                
+                const tokenRequest = { 
+                    scopes: ["Sites.Read.All"], 
+                    prompt: "select_account" // Zwingt Microsoft, das Konto-Auswahlfenster zu zeigen
+                };
+
+                msalInstance.loginPopup(tokenRequest)
+                    .then(tokenResponse => {
+                        // Wenn das Popup erfolgreich war:
+                        setDebugMsg("Login erfolgreich! Lade Daten...");
+                        setLoading(true);
+                        msalInstance.setActiveAccount(tokenResponse.account);
+                        setUser({ userDetails: tokenResponse.account.username });
+                        setAuthRequired(false);
+                        
+                        // Rufe die SharePoint Daten ab
+                        return fetchSharePointData(tokenResponse.account.username, tokenResponse.accessToken);
+                    })
+                    .catch(error => {
+                        console.error("Popup Fehler:", error);
+                        setDebugMsg("Anmeldung wurde abgebrochen oder blockiert.");
                     });
-                } catch (error) {
-                    console.error("Redirect Error:", error);
-                    setDebugMsg("Weiterleitung fehlgeschlagen. Bitte Seite neu laden.");
-                    setLoading(false);
-                }
             };
 
             // ==========================================
             // DATEN ABRUFEN
             // ==========================================
-            const fetchSharePointData = async (userEmail, token) => {
+            const fetchSharePointData = async (userEmail, preFetchedToken = null) => {
                 try {
+                    setDebugMsg("Verbinde mit Microsoft Graph...");
+                    let token = preFetchedToken;
+                    
+                    if (!token) {
+                        try {
+                            const accounts = msalInstance.getAllAccounts();
+                            const tokenResponse = await msalInstance.acquireTokenSilent({
+                                scopes: ["Sites.Read.All"],
+                                account: accounts[0]
+                            });
+                            token = tokenResponse.accessToken;
+                        } catch (err) {
+                            // Wenn der leise Abruf scheitert -> Knopf zeigen, NICHT umleiten!
+                            setDebugMsg("Sitzung abgelaufen. Bitte erneut verbinden.");
+                            setAuthRequired(true);
+                            setLoading(false);
+                            return; 
+                        }
+                    }
+
                     const graphUrl = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${MS_CONFIG.listId}/items?$expand=fields`;
                     
                     const res = await fetch(graphUrl, {
@@ -188,7 +198,7 @@
                             if (studentRow.fields.Erledigte_Module) {
                                 const modulesArray = studentRow.fields.Erledigte_Module.split(',').map(m => parseInt(m.trim()));
                                 setCompletedTasks(modulesArray);
-                                setDebugMsg(""); // Erfolgreich, lösche Diagnose
+                                setDebugMsg(""); 
                             } else {
                                 setDebugMsg("Schüler gefunden, aber noch keine Module erledigt.");
                             }
@@ -203,7 +213,6 @@
                     setDebugMsg(`Verbindungsfehler zur Liste: ${error.message}`);
                 } finally {
                     setLoading(false);
-                    setAuthRequired(false);
                 }
             };
 
@@ -234,7 +243,7 @@
                             >
                                 Mit Microsoft verbinden
                             </button>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Die Seite wird kurz neu geladen.</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Es öffnet sich ein kleines Fenster.</p>
                         </div>
                     </div>
                 );
