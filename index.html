@@ -5,12 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Medienpass Thomaeum</title>
     
-    <!-- Lade benötigte Bibliotheken (Tailwind, React, Babel, Icons) -->
+    <!-- Lade alle benötigten Bibliotheken -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- GANZ WICHTIG: Die Microsoft Graph / Login Bibliothek -->
+    <script type="text/javascript" src="https://alcdn.msauth.net/browser/2.32.2/js/msal-browser.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
@@ -22,10 +25,12 @@
 <body>
     <div id="root"></div>
 
-    <!-- Hier beginnt der eigentliche App-Code, verpackt für den Browser -->
     <script type="text/babel">
         const { useState, useEffect } = React;
 
+        // ==========================================
+        // DIE 4 FINALEN IDs (Bereits für dich eingetragen)
+        // ==========================================
         const MS_CONFIG = {
             tenantId: "09c4bd58-1b8c-410d-930e-816015e61028",
             clientId: "7d277b19-93c1-4df7-8f1b-d38749b3d440",
@@ -35,6 +40,15 @@
 
         const THOMA_RED = "#BF0D3E";
 
+        // MSAL Konfiguration für Graph API
+        const msalConfig = {
+            auth: {
+                clientId: MS_CONFIG.clientId,
+                authority: `https://login.microsoftonline.com/${MS_CONFIG.tenantId}`,
+            }
+        };
+        const msalInstance = new msal.PublicClientApplication(msalConfig);
+
         const Icon = ({ name, size = 24, className = "", color = "currentColor" }) => {
             const icons = {
                 shield: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>,
@@ -43,7 +57,8 @@
                 clock: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
                 user: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>,
                 tool: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 19 7-7 3 3-7 7-3-3z" /><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /></svg>,
-                globe: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>
+                globe: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>,
+                refresh: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21v-5h5"/></svg>
             };
             return icons[name] || null;
         };
@@ -86,32 +101,119 @@
             const [completedTasks, setCompletedTasks] = useState([]);
             const [activeStage, setActiveStage] = useState("5-6");
             const [loading, setLoading] = useState(true);
+            const [syncing, setSyncing] = useState(false);
+            const [debugMsg, setDebugMsg] = useState(""); // Zeigt Fehler auf dem Bildschirm an
 
             useEffect(() => {
                 const initApp = async () => {
                     try {
                         let payload = { clientPrincipal: null };
-                        if (window.location.origin.startsWith('http')) {
-                            const response = await fetch('/.auth/me');
+                        // Wir prüfen nicht mehr ob die Origin mit http startet, da fetch relative URLs auch so nicht immer mag. 
+                        // Stattdessen versuchen wir es einfach und fangen den Fehler, falls wir nicht auf Azure sind.
+                        try {
+                             // Erstelle eine absolute URL aus window.location.origin
+                            const authUrl = new URL('/.auth/me', window.location.origin).toString();
+                            const response = await fetch(authUrl);
                             if (response.ok) {
                                 payload = await response.json();
                             }
+                        } catch (fetchErr) {
+                             console.log("Kann '/.auth/me' nicht erreichen (läuft vermutlich lokal/in Vorschau).", fetchErr);
                         }
+                        
                         if (payload.clientPrincipal) {
                             setUser(payload.clientPrincipal);
-                            setCompletedTasks([]); 
+                            // Wenn Benutzer eingeloggt ist, lade Daten aus SharePoint
+                            fetchSharePointData(payload.clientPrincipal.userDetails);
                         } else {
-                            setUser({ userDetails: "Gast-Nutzer" });
-                            setCompletedTasks([]); 
+                            setUser({ userDetails: "Gast-Nutzer (Nicht eingeloggt)" });
+                            setLoading(false);
                         }
                     } catch (err) {
-                        console.warn("Auth-Endpoint nicht erreichbar.");
-                    } finally {
+                        console.error("Auth-Fehler:", err);
+                        setDebugMsg("Authentifizierung fehlgeschlagen.");
                         setLoading(false);
                     }
                 };
                 initApp();
             }, []);
+
+            // ==========================================
+            // LOGIK: ABRUF VON MICROSOFT LISTS
+            // ==========================================
+            const fetchSharePointData = async (userEmail) => {
+                setSyncing(true);
+                setDebugMsg("Verbinde mit Microsoft Graph...");
+                
+                try {
+                    await msalInstance.initialize();
+                    const tokenRequest = { scopes: ["Sites.Read.All"] };
+                    let tokenResponse;
+                    
+                    try {
+                        console.log("Versuche leisen Login...");
+                        tokenResponse = await msalInstance.ssoSilent(tokenRequest);
+                    } catch (err) {
+                        console.log("Leiser Login fehlgeschlagen, fordere Popup an...", err);
+                        setDebugMsg("Bitte im Popup anmelden / Berechtigung erteilen...");
+                        tokenResponse = await msalInstance.loginPopup(tokenRequest);
+                    }
+
+                    const token = tokenResponse.accessToken;
+                    setDebugMsg("Token erhalten, frage SharePoint Liste ab...");
+
+                    // URL zur Liste zusammenbauen
+                    const graphUrl = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${MS_CONFIG.listId}/items?$expand=fields`;
+                    console.log("Graph URL:", graphUrl);
+                    
+                    const res = await fetch(graphUrl, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    
+                    if (res.ok) {
+                        const data = await res.json();
+                        console.log("KOMPLETTE DATEN AUS SHAREPOINT:", data.value);
+                        
+                        // Suche nach dem Schüler (Groß-/Kleinschreibung ignorieren)
+                        const studentRow = data.value.find(item => 
+                            item.fields.Title && 
+                            item.fields.Title.toLowerCase() === userEmail.toLowerCase()
+                        );
+                        
+                        if (studentRow) {
+                            console.log("Zeile für Schüler gefunden:", studentRow.fields);
+                            
+                            // WICHTIG: Die Spalte in SharePoint MUSS "Erledigte_Module" heißen
+                            if (studentRow.fields.Erledigte_Module) {
+                                const modulesArray = studentRow.fields.Erledigte_Module.split(',').map(m => parseInt(m.trim()));
+                                setCompletedTasks(modulesArray);
+                                setDebugMsg("Daten erfolgreich geladen!");
+                            } else {
+                                setDebugMsg("Schüler gefunden, aber Spalte 'Erledigte_Module' ist leer oder existiert nicht.");
+                            }
+                        } else {
+                            console.warn("Kein Eintrag in der SharePoint-Liste gefunden für:", userEmail);
+                            setDebugMsg(`Kein Eintrag für ${userEmail} in SharePoint gefunden.`);
+                        }
+                    } else {
+                        const errorData = await res.text();
+                        console.error("Graph API Fehler:", errorData);
+                        setDebugMsg(`Fehler beim Abruf: ${res.status} - Bitte Konsole (F12) prüfen.`);
+                    }
+
+                } catch (error) {
+                    console.error("Schwerer Fehler bei SharePoint Synchronisation:", error);
+                    setDebugMsg(`Schwerer Fehler: ${error.message}`);
+                } finally {
+                    setLoading(false);
+                    setSyncing(false);
+                    
+                    // Verstecke die Erfolgsmeldung nach 3 Sekunden
+                    setTimeout(() => {
+                        setDebugMsg(prev => prev === "Daten erfolgreich geladen!" ? "" : prev);
+                    }, 3000);
+                }
+            };
 
             const progressValue = Math.round((completedTasks.length / 18) * 100);
 
@@ -119,13 +221,20 @@
                 return (
                     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
                         <div className="w-12 h-12 border-4 border-slate-200 border-t-red-600 rounded-full animate-spin mb-4"></div>
-                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Initialisiere Portfolio...</p>
+                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Lade App...</p>
                     </div>
                 );
             }
 
             return (
-                <div className="min-h-screen flex flex-col bg-slate-50 font-sans selection:bg-red-100">
+                <div className="min-h-screen flex flex-col bg-slate-50 font-sans selection:bg-red-100 relative">
+                    {/* Debug-Meldung Leiste */}
+                    {debugMsg && (
+                        <div className={`w-full text-center py-2 text-xs font-bold ${debugMsg.includes('Fehler') || debugMsg.includes('Kein Eintrag') ? 'bg-red-600 text-white' : 'bg-green-500 text-white'}`}>
+                            DIAGNOSE: {debugMsg}
+                        </div>
+                    )}
+                    
                     <header className="bg-white border-b h-20 flex items-center justify-between px-8 shadow-sm sticky top-0 z-40">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-xl text-white shadow-lg shadow-red-100 flex items-center justify-center" style={{ backgroundColor: THOMA_RED }}>
@@ -136,7 +245,10 @@
                         
                         <div className="flex items-center gap-4">
                             <div className="text-right hidden sm:block">
-                                <p className="text-[10px] font-black text-green-600 uppercase leading-none mb-1">Status: Online</p>
+                                <p className="text-[10px] font-black text-blue-600 uppercase leading-none mb-1 flex items-center justify-end gap-1">
+                                    {syncing ? <Icon name="refresh" size={10} className="animate-spin" /> : "MS Graph:"} 
+                                    {syncing ? "Synct..." : "Aktiv"}
+                                </p>
                                 <p className="text-xs font-bold text-slate-700">{user?.userDetails || 'Anonym'}</p>
                             </div>
                             <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 border-2 border-white shadow-sm overflow-hidden">
@@ -155,14 +267,14 @@
                                         {user?.userDetails || '[Name laden...]'}
                                     </div>
                                     <p className="text-red-100 text-lg max-w-md font-medium leading-relaxed italic">
-                                        Dein Fortschritt wird hier angezeigt, sobald eine Lehrkraft deine Leistungen bestätigt hat.
+                                        Die Daten werden live aus dem zentralen Microsoft-System deiner Schule geladen.
                                     </p>
                                 </div>
                                 
                                 <div className="bg-white/10 p-8 rounded-[2.5rem] backdrop-blur-md text-center border border-white/20 shadow-inner min-w-[220px] mt-8 md:mt-0">
                                     <div className="text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-red-200">Dein Fortschritt</div>
                                     <div className="text-7xl font-black mb-4 text-white">{progressValue}%</div>
-                                    <div className="h-2 w-full bg-white/20 rounded-full overflow-hidden">
+                                    <div className="h-2 w-full bg-white/20 rounded-full overflow-hidden relative">
                                         <div className="bg-white h-full transition-all duration-1000" style={{ width: `${progressValue}%` }}></div>
                                     </div>
                                 </div>
@@ -210,14 +322,9 @@
                                                         <div className="flex-1">
                                                             <h4 className={`font-black text-xl mb-1 ${done ? 'text-green-900' : 'text-slate-900'}`}>{t.title}</h4>
                                                             <p className={`text-sm font-medium leading-relaxed ${done ? 'text-green-700/70' : 'text-slate-400'}`}>
-                                                                {done ? "Zertifiziert durch Fachlehrkraft." : t.desc}
+                                                                {done ? "Zertifiziert & in der Datenbank hinterlegt." : t.desc}
                                                             </p>
                                                         </div>
-                                                        {!done && (
-                                                            <div className="absolute top-0 right-0 bg-slate-50 text-slate-400 px-4 py-1 rounded-bl-2xl text-[10px] font-black uppercase tracking-widest">
-                                                                Offen
-                                                            </div>
-                                                        )}
                                                     </div>
                                                 );
                                             })}
@@ -227,10 +334,6 @@
                             </div>
                         </div>
                     </main>
-
-                    <footer className="p-12 text-center text-slate-400 text-[10px] font-black uppercase tracking-widest bg-white border-t">
-                        &copy; 2026 Gymnasium Thomaeum | Digitales Portfolio
-                    </footer>
                 </div>
             );
         };
