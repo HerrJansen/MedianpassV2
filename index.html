@@ -152,6 +152,15 @@
             };
 
             // ==========================================
+            // ABMELDEN FUNKTION
+            // ==========================================
+            const handleLogout = () => {
+                msalInstance.logoutRedirect({
+                    postLogoutRedirectUri: window.location.origin
+                });
+            };
+
+            // ==========================================
             // DATEN ABRUFEN
             // ==========================================
             const fetchSharePointData = async (userEmail, preFetchedToken = null) => {
@@ -275,6 +284,12 @@
                             <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 border-2 border-white shadow-sm overflow-hidden">
                                 <Icon name="user" size={20} />
                             </div>
+                            <button 
+                                onClick={handleLogout}
+                                className="ml-2 text-[10px] font-black uppercase tracking-widest bg-slate-100 hover:bg-red-100 hover:text-red-600 text-slate-500 px-3 py-2 rounded-xl transition-all"
+                            >
+                                Abmelden
+                            </button>
                         </div>
                     </header>
 
