@@ -3,33 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lehrerkonsole | Medienpass Thomaeum</title>
+    <title>Medienpass Thomaeum</title>
     
-    <!-- Bibliotheken -->
+    <!-- Lade alle benötigten Bibliotheken -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- GANZ WICHTIG: Die Microsoft Graph / Login Bibliothek -->
     <script type="text/javascript" src="https://alcdn.msauth.net/browser/2.32.2/js/msal-browser.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         :root { --thomaeum-red: #BF0D3E; }
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .spinner { border: 3px solid rgba(0,0,0,0.1); border-left-color: var(--thomaeum-red); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect } = React;
 
         // ==========================================
-        // KONFIGURATION (Gymnasium Thomaeum)
+        // DIE 4 FINALEN IDs
         // ==========================================
         const MS_CONFIG = {
             tenantId: "09c4bd58-1b8c-410d-930e-816015e61028",
@@ -37,8 +37,12 @@
             siteId: "thomaeumde.sharepoint.com,9ef17c4d-b57b-482e-9168-3cc3bc43bc3d,d600d53b-cfd0-45f7-96a5-f1ac20222f8f",
             listId: "08da02d9-5b67-4938-9d7e-9e9dee97fa2e"
         };
+
         const THOMA_RED = "#BF0D3E";
 
+        // ==========================================
+        // MSAL INITIALISIERUNG
+        // ==========================================
         const msalConfig = {
             auth: {
                 clientId: MS_CONFIG.clientId,
@@ -46,73 +50,71 @@
                 redirectUri: window.location.origin,
                 navigateToLoginRequestUrl: false
             },
-            cache: { cacheLocation: "localStorage", storeAuthStateInCookie: true }
+            cache: {
+                cacheLocation: "localStorage",
+                storeAuthStateInCookie: true, 
+            }
         };
         const msalInstance = new msal.PublicClientApplication(msalConfig);
-        const msalInitPromise = msalInstance.initialize();
+        const msalInitPromise = msalInstance.initialize(); 
 
-        const ALL_MODULES = [
-            { id: 1, title: "Hardware-Führerschein", stage: "5-6" }, { id: 2, title: "Dateimanagement", stage: "5-6" }, { id: 3, title: "Textverarbeitung I", stage: "5-6" },
-            { id: 4, title: "Netiquette", stage: "5-6" }, { id: 5, title: "Prävention", stage: "5-6" }, { id: 6, title: "Suchmaschinen", stage: "5-6" },
-            { id: 7, title: "Präsentationsprofi", stage: "7-8" }, { id: 8, title: "Medienproduktion", stage: "7-8" }, { id: 9, title: "Tabellenkalkulation", stage: "7-8" },
-            { id: 10, title: "Urheberrecht", stage: "7-8" }, { id: 11, title: "Quellenkritik", stage: "7-8" }, { id: 12, title: "Datenschutz", stage: "7-8" },
-            { id: 13, title: "KI-Produktivität", stage: "9-10" }, { id: 14, title: "Digitale Bewerbung", stage: "9-10" }, { id: 15, title: "Projektmanagement", stage: "9-10" },
-            { id: 16, title: "KI-Ethik", stage: "9-10" }, { id: 17, title: "Zivilcourage", stage: "9-10" }, { id: 18, title: "Digitaler Fußabdruck", stage: "9-10" }
-        ];
+        const Icon = ({ name, size = 24, className = "", color = "currentColor" }) => {
+            const icons = {
+                shield: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>,
+                award: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="8" r="7" /><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" /></svg>,
+                check: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12" /></svg>,
+                clock: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
+                user: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>,
+                tool: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 19 7-7 3 3-7 7-3-3z" /><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /></svg>,
+                globe: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>,
+                refresh: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21v-5h5"/></svg>
+            };
+            return icons[name] || null;
+        };
 
-        const Icon = ({ name, size = 20, className = "" }) => {
-            const [svg, setSvg] = useState("");
-            useEffect(() => {
-                if (window.lucide && window.lucide.icons[name]) {
-                    setSvg(window.lucide.icons[name].toSvg({ width: size, height: size, class: className }));
-                }
-            }, [name, size, className]);
-            return <span className="inline-flex items-center" dangerouslySetInnerHTML={{ __html: svg }} />;
+        const curriculumData = {
+            "5-6": { tasks: [{ id: 1, category: "Anwendung", title: "Hardware-Führerschein", desc: "Geräte bedienen." }, { id: 2, category: "Anwendung", title: "Dateimanagement", desc: "Cloud-Strukturen." }, { id: 3, category: "Anwendung", title: "Textverarbeitung I", desc: "Layouts & PDF." }, { id: 4, category: "Umgang", title: "Netiquette", desc: "Klassenchat." }, { id: 5, category: "Umgang", title: "Prävention", desc: "Cybermobbing." }, { id: 6, category: "Umgang", title: "Suchmaschinen", desc: "Sicher recherchieren." }] },
+            "7-8": { tasks: [{ id: 7, category: "Anwendung", title: "Präsentationsprofi", desc: "Vortrag." }, { id: 8, category: "Anwendung", title: "Medienproduktion", desc: "Video-Schnitt." }, { id: 9, category: "Anwendung", title: "Tabellenkalkulation", desc: "Daten visualisieren." }, { id: 10, category: "Umgang", title: "Urheberrecht", desc: "Lizenzen." }, { id: 11, category: "Umgang", title: "Quellenkritik", desc: "Fake News." }, { id: 12, category: "Umgang", title: "Datenschutz", desc: "Privatsphäre." }] },
+            "9-10": { tasks: [{ id: 13, category: "Anwendung", title: "KI-Produktivität", desc: "Prompting." }, { id: 14, category: "Anwendung", title: "Digitale Bewerbung", desc: "Profile." }, { id: 15, category: "Anwendung", title: "Projektmanagement", desc: "Agiles Arbeiten." }, { id: 16, category: "Umgang", title: "KI-Ethik", desc: "Algorithmen." }, { id: 17, category: "Umgang", title: "Zivilcourage", desc: "Hate Speech." }, { id: 18, category: "Umgang", title: "Digitaler Fußabdruck", desc: "Biografie." }] }
         };
 
         const App = () => {
             const [user, setUser] = useState(null);
-            const [students, setStudents] = useState([]);
+            const [realName, setRealName] = useState(""); 
+            const [completedTasks, setCompletedTasks] = useState([]);
+            const [activeStage, setActiveStage] = useState("5-6");
             const [loading, setLoading] = useState(true);
             const [authRequired, setAuthRequired] = useState(false);
-            const [accessDenied, setAccessDenied] = useState(false);
             const [debugMsg, setDebugMsg] = useState("");
-            const [isUpdating, setIsUpdating] = useState(false);
 
-            // Filter States
-            const [searchName, setSearchName] = useState("");
-            const [filterKlasse, setFilterKlasse] = useState("ALL");
-            const [filterJahrgang, setFilterJahrgang] = useState("ALL");
-            const [filterModul, setFilterModul] = useState("ALL");
-
-            // Initialisierung & Auth
             useEffect(() => {
                 const bootstrap = async () => {
                     try {
-                        setDebugMsg("Lade MSAL...");
+                        setDebugMsg("Lade Microsoft Authentifizierung...");
                         await msalInitPromise;
-                        const redirectResponse = await msalInstance.handleRedirectPromise();
                         
-                        let activeAccount = msalInstance.getActiveAccount();
-                        if (!activeAccount && msalInstance.getAllAccounts().length > 0) {
-                            activeAccount = msalInstance.getAllAccounts()[0];
-                            msalInstance.setActiveAccount(activeAccount);
+                        const redirectResponse = await msalInstance.handleRedirectPromise();
+                        if (redirectResponse && redirectResponse.account) {
+                            setDebugMsg("Login via Weiterleitung erfolgreich.");
+                            msalInstance.setActiveAccount(redirectResponse.account);
+                            setUser({ userDetails: redirectResponse.account.username });
+                            fetchSharePointData(redirectResponse.account.username, redirectResponse.accessToken);
+                            return;
                         }
 
+                        const activeAccount = msalInstance.getActiveAccount() || msalInstance.getAllAccounts()[0];
                         if (activeAccount) {
-                            const isAuthorized = await verifyTeacherStatus(activeAccount);
-                            if (isAuthorized) {
-                                setUser({ name: activeAccount.name, username: activeAccount.username });
-                                fetchData(activeAccount);
-                            } else {
-                                setLoading(false);
-                            }
+                            setDebugMsg("Lokales Konto gefunden, prüfe Berechtigung...");
+                            msalInstance.setActiveAccount(activeAccount);
+                            setUser({ userDetails: activeAccount.username });
+                            fetchSharePointData(activeAccount.username);
                         } else {
                             setAuthRequired(true);
                             setLoading(false);
                         }
                     } catch (err) {
-                        setDebugMsg("Startfehler: " + err.message);
+                        console.error("Auth Bootstrap Fehler:", err);
+                        setDebugMsg("Startfehler: Bitte neu laden.");
                         setAuthRequired(true);
                         setLoading(false);
                     }
@@ -120,256 +122,115 @@
                 bootstrap();
             }, []);
 
-            // DYNAMISCHE SICHERHEIT: LEHRER-ERKENNUNG
-            const verifyTeacherStatus = async (account) => {
-                setLoading(true);
-                setDebugMsg("Prüfe Zugriffsrechte...");
-                try {
-                    const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["Sites.Read.All"], account });
-                    const token = tokenRes.accessToken;
-
-                    const listsUrl = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists`;
-                    const listsRes = await fetch(listsUrl, { headers: { Authorization: `Bearer ${token}` } });
-                    const listsData = await listsRes.json();
-                    
-                    const teacherList = listsData.value.find(l => 
-                        l.displayName === "Medienpass Lehrer" || l.name === "Medienpass Lehrer"
-                    );
-                    
-                    if (!teacherList) {
-                        setDebugMsg("Sicherheits-Liste 'Medienpass Lehrer' wurde im SharePoint nicht gefunden!");
-                        setAccessDenied(true);
-                        return false;
-                    }
-
-                    const itemsUrl = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${teacherList.id}/items?$expand=fields`;
-                    const itemsRes = await fetch(itemsUrl, { headers: { Authorization: `Bearer ${token}` } });
-                    const itemsData = await itemsRes.json();
-
-                    const isTeacher = itemsData.value.some(item => 
-                        item.fields.Title && item.fields.Title.toLowerCase() === account.username.toLowerCase()
-                    );
-
-                    if (isTeacher) {
-                        setAccessDenied(false);
-                        return true;
-                    } else {
-                        setAccessDenied(true);
-                        return false;
-                    }
-                } catch (error) {
-                    console.error("Fehler bei Rechteprüfung:", error);
-                    setDebugMsg("Fehler bei der Rechte-Prüfung.");
-                    setAccessDenied(true);
-                    return false;
-                }
-            };
-
             const handleLogin = async () => {
-                const tokenRequest = { scopes: ["Sites.ReadWrite.All"], prompt: "select_account" };
+                const tokenRequest = { scopes: ["Sites.Read.All"], prompt: "select_account" };
+                
                 try {
                     const response = await msalInstance.loginPopup(tokenRequest);
                     setLoading(true);
+                    setDebugMsg("Erfolgreich angemeldet!");
                     msalInstance.setActiveAccount(response.account);
-                    
-                    const isAuthorized = await verifyTeacherStatus(response.account);
-                    if (isAuthorized) {
-                        setUser({ name: response.account.name, username: response.account.username });
-                        setAuthRequired(false);
-                        fetchData(response.account);
-                    } else {
-                        setLoading(false);
-                    }
+                    setUser({ userDetails: response.account.username });
+                    setAuthRequired(false);
+                    fetchSharePointData(response.account.username, response.accessToken);
                 } catch (error) {
+                    console.warn("Popup blockiert oder geschlossen, wechsele zu Redirect:", error);
                     if (error.name === "BrowserAuthError" || error.message.includes("popup")) {
+                        setDebugMsg("Popup blockiert. Leite sicher weiter...");
                         msalInstance.loginRedirect(tokenRequest);
+                    } else {
+                        setDebugMsg("Anmeldung abgebrochen.");
                     }
                 }
             };
 
-            const handleLogout = () => msalInstance.logoutRedirect({ postLogoutRedirectUri: window.location.origin });
+            const handleLogout = () => {
+                msalInstance.logoutRedirect({
+                    postLogoutRedirectUri: window.location.origin
+                });
+            };
 
-            const fetchData = async (account) => {
+            const fetchSharePointData = async (userEmail, preFetchedToken = null) => {
                 setLoading(true);
-                setDebugMsg("Lade Schülerdaten aus SharePoint...");
                 try {
-                    const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["Sites.ReadWrite.All"], account });
+                    setDebugMsg("Verbinde mit Schuldatenbank...");
+                    let token = preFetchedToken;
                     
-                    let url = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${MS_CONFIG.listId}/items?$expand=fields&$top=999`;
+                    if (!token) {
+                        const account = msalInstance.getActiveAccount();
+                        const response = await msalInstance.acquireTokenSilent({
+                            scopes: ["Sites.Read.All"],
+                            account: account
+                        });
+                        token = response.accessToken;
+                    }
+
+                    const graphUrl = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${MS_CONFIG.listId}/items?$expand=fields`;
                     
-                    const res = await fetch(url, { headers: { Authorization: `Bearer ${tokenRes.accessToken}` }});
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    const data = await res.json();
-                    
-                    const parsedStudents = data.value.map(item => {
-                        const f = item.fields;
-                        const completedArray = f.Erledigte_Module ? f.Erledigte_Module.split(',').map(m => parseInt(m.trim())).filter(n => !isNaN(n)) : [];
-                        return {
-                            id: item.id,
-                            email: f.Title || "",
-                            vorname: f.Vorname || "",
-                            nachname: f.Nachname || "",
-                            klasse: f.Klasse || "Unbekannt",
-                            completedTasks: completedArray
-                        };
+                    const res = await fetch(graphUrl, {
+                        headers: { Authorization: `Bearer ${token}` }
                     });
                     
-                    parsedStudents.sort((a, b) => a.nachname.localeCompare(b.nachname));
-                    setStudents(parsedStudents);
-                    setDebugMsg("");
+                    if (res.ok) {
+                        const data = await res.json();
+                        const studentRow = data.value.find(item => 
+                            item.fields.Title && 
+                            item.fields.Title.toLowerCase() === userEmail.toLowerCase()
+                        );
+                        
+                        if (studentRow) {
+                            const vorname = studentRow.fields.Vorname || "";
+                            const nachname = studentRow.fields.Nachname || "";
+                            
+                            if (vorname || nachname) {
+                                setRealName(`${vorname} ${nachname}`.trim());
+                            } else if (studentRow.fields.SchuelerName) {
+                                setRealName(studentRow.fields.SchuelerName);
+                            }
+
+                            if (studentRow.fields.Erledigte_Module) {
+                                const modulesArray = studentRow.fields.Erledigte_Module.split(',').map(m => parseInt(m.trim()));
+                                setCompletedTasks(modulesArray);
+                            }
+                            setDebugMsg(""); 
+                        } else {
+                            setDebugMsg(`Dein Konto (${userEmail}) ist noch nicht in der Datenbank.`);
+                        }
+                    } else {
+                        setDebugMsg(`Datenbank-Fehler (${res.status}): Überprüfe die Azure-Rechte.`);
+                    }
+
                 } catch (error) {
                     console.error(error);
-                    setDebugMsg("Fehler beim Laden (Fehlende Rechte?).");
+                    setDebugMsg(`Sitzung abgelaufen. Bitte neu anmelden.`);
                     setAuthRequired(true);
                 } finally {
                     setLoading(false);
                 }
             };
 
-            const toggleModuleSingle = async (studentId, moduleId) => {
-                if (isUpdating) return;
-                setIsUpdating(true);
-                
-                try {
-                    const student = students.find(s => s.id === studentId);
-                    const isDone = student.completedTasks.includes(moduleId);
-                    const newTasks = isDone 
-                        ? student.completedTasks.filter(id => id !== moduleId) 
-                        : [...student.completedTasks, moduleId];
-                    
-                    await updateSharePoint(studentId, newTasks);
-                    
-                    setStudents(prev => prev.map(s => s.id === studentId ? { ...s, completedTasks: newTasks } : s));
-                } catch (err) {
-                    alert("Fehler beim Speichern in SharePoint: " + err.message);
-                } finally {
-                    setIsUpdating(false);
-                }
-            };
-
-            const bulkToggle = async (action) => {
-                if (filterModul === "ALL" || isUpdating) {
-                    alert("Bitte wähle zuerst oben rechts im Filter ein spezifisches Modul aus, um Massenaktionen durchzuführen.");
-                    return;
-                }
-                
-                const moduleId = parseInt(filterModul);
-                const studentsToUpdate = filteredStudents.filter(s => {
-                    const hasMod = s.completedTasks.includes(moduleId);
-                    return action === "grant" ? !hasMod : hasMod;
-                });
-
-                if (studentsToUpdate.length === 0) {
-                    alert("Alle angezeigten Schüler haben diesen Status bereits.");
-                    return;
-                }
-
-                if (!confirm(`Möchtest du Modul ${moduleId} für ${studentsToUpdate.length} Schüler ${action === 'grant' ? 'freischalten' : 'sperren'}?`)) return;
-
-                setIsUpdating(true);
-                setDebugMsg(`Aktualisiere ${studentsToUpdate.length} Schüler... Bitte warten.`);
-
-                try {
-                    const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["Sites.ReadWrite.All"], account: msalInstance.getActiveAccount() });
-                    
-                    const updatePromises = studentsToUpdate.map(async (student) => {
-                        let newTasks = action === "grant" 
-                            ? [...student.completedTasks, moduleId] 
-                            : student.completedTasks.filter(id => id !== moduleId);
-                        
-                        const url = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${MS_CONFIG.listId}/items/${student.id}/fields`;
-                        await fetch(url, {
-                            method: 'PATCH',
-                            headers: { 'Authorization': `Bearer ${tokenRes.accessToken}`, 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ "Erledigte_Module": newTasks.join(', ') })
-                        });
-                        return { id: student.id, tasks: newTasks };
-                    });
-
-                    const results = await Promise.all(updatePromises);
-                    
-                    setStudents(prev => prev.map(s => {
-                        const updatedInfo = results.find(r => r.id === s.id);
-                        return updatedInfo ? { ...s, completedTasks: updatedInfo.tasks } : s;
-                    }));
-                    
-                    setDebugMsg("Massen-Update erfolgreich!");
-                    setTimeout(() => setDebugMsg(""), 3000);
-                } catch (err) {
-                    alert("Fehler beim Massen-Update: " + err.message);
-                } finally {
-                    setIsUpdating(false);
-                }
-            };
-
-            const updateSharePoint = async (itemId, tasksArray) => {
-                const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["Sites.ReadWrite.All"], account: msalInstance.getActiveAccount() });
-                const url = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${MS_CONFIG.listId}/items/${itemId}/fields`;
-                
-                const res = await fetch(url, {
-                    method: 'PATCH',
-                    headers: { 'Authorization': `Bearer ${tokenRes.accessToken}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ "Erledigte_Module": tasksArray.join(', ') })
-                });
-                
-                if (!res.ok) throw new Error("Graph API Update gescheitert.");
-            };
-
-            const uniqueKlassen = useMemo(() => [...new Set(students.map(s => s.klasse))].sort(), [students]);
-            
-            const uniqueJahrgaenge = useMemo(() => {
-                const j = students.map(s => s.klasse.match(/\d+/)?.[0]).filter(Boolean);
-                return [...new Set(j)].sort((a,b) => parseInt(a) - parseInt(b));
-            }, [students]);
-
-            const filteredStudents = useMemo(() => {
-                return students.filter(s => {
-                    const searchMatch = `${s.vorname} ${s.nachname}`.toLowerCase().includes(searchName.toLowerCase());
-                    const klasseMatch = filterKlasse === "ALL" || s.klasse === filterKlasse;
-                    const jg = s.klasse.match(/\d+/)?.[0];
-                    const jahrgangMatch = filterJahrgang === "ALL" || jg === filterJahrgang;
-                    
-                    return searchMatch && klasseMatch && jahrgangMatch;
-                });
-            }, [students, searchName, filterKlasse, filterJahrgang]);
-
-            // Prüfen, ob irgendein Filter gesetzt ist
-            const hasActiveFilters = searchName.trim() !== "" || filterJahrgang !== "ALL" || filterKlasse !== "ALL" || filterModul !== "ALL";
-
-
-            // ==========================================
-            // UI RENDER
-            // ==========================================
-            
-            if (accessDenied) {
-                return (
-                    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6 relative">
-                        {debugMsg && <div className="absolute top-0 left-0 w-full text-center py-2 text-xs font-bold bg-slate-800 text-white shadow-md">SYSTEM-STATUS: {debugMsg}</div>}
-                        <div className="bg-white p-10 rounded-[3rem] shadow-2xl max-w-md w-full text-center border border-red-100">
-                            <div className="mx-auto w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6 text-red-600">
-                                <Icon name="shield-alert" size={48} />
-                            </div>
-                            <h2 className="text-2xl font-black mb-4 uppercase tracking-tighter text-slate-800">Zugriff verweigert</h2>
-                            <p className="text-slate-500 mb-8 font-medium">Dein Konto steht nicht in der SharePoint-Liste <b>"Medienpass Lehrer"</b>. Diese App ist ausschließlich für das berechtigte Kollegium freigegeben.</p>
-                            <button onClick={handleLogout} className="w-full bg-slate-100 text-slate-600 hover:bg-slate-200 font-black uppercase px-8 py-4 rounded-2xl transition-all shadow-sm">
-                                Abmelden / Zurück
-                            </button>
-                        </div>
-                    </div>
-                );
-            }
+            const progressValue = Math.round((completedTasks.length / 18) * 100);
 
             if (authRequired) {
                 return (
                     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6 relative">
-                        {debugMsg && <div className="absolute top-0 left-0 w-full text-center py-2 text-xs font-bold bg-slate-800 text-white shadow-md">SYSTEM-STATUS: {debugMsg}</div>}
+                        {debugMsg && (
+                            <div className="absolute top-0 left-0 w-full text-center py-2 text-xs font-bold bg-slate-800 text-white shadow-md">
+                                SYSTEM-STATUS: {debugMsg}
+                            </div>
+                        )}
                         <div className="bg-white p-10 rounded-[3rem] shadow-2xl max-w-md w-full text-center border">
                             <div className="mx-auto w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6 text-red-600">
-                                <Icon name="lock" size={48} />
+                                <Icon name="shield" size={48} />
                             </div>
-                            <h2 className="text-2xl font-black mb-4 uppercase tracking-tighter text-slate-800">Lehrer-Login</h2>
-                            <p className="text-slate-500 mb-6 font-medium">Bitte logge dich mit deinem Office 365 Schulkonto ein, um Schülerdaten zu verwalten.</p>
-                            <button onClick={handleLogin} className="w-full text-white font-black uppercase px-8 py-4 rounded-2xl transition-all shadow-lg hover:scale-105 active:scale-95 mb-6" style={{ backgroundColor: THOMA_RED }}>
+                            <h2 className="text-2xl font-black mb-4 uppercase tracking-tighter text-slate-800">Datenzugriff erlauben</h2>
+                            <p className="text-slate-500 mb-6 font-medium">Klicke auf den Button, um dich sicher mit deinem Office 365 Schulkonto zu verbinden.</p>
+                            
+                            <button 
+                                onClick={handleLogin}
+                                className="w-full text-white font-black uppercase px-8 py-4 rounded-2xl transition-all shadow-lg hover:scale-105 active:scale-95 mb-6"
+                                style={{ backgroundColor: THOMA_RED }}
+                            >
                                 Mit Microsoft verbinden
                             </button>
                         </div>
@@ -380,134 +241,118 @@
             if (loading) {
                 return (
                     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-                        <div className="spinner mb-4"></div>
-                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{debugMsg || "Lade System..."}</p>
+                        <div className="w-12 h-12 border-4 border-slate-200 border-t-red-600 rounded-full animate-spin mb-4"></div>
+                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{debugMsg || "Lade Medienpass..."}</p>
                     </div>
                 );
             }
 
             return (
-                <div className="min-h-screen flex flex-col bg-slate-50 font-sans selection:bg-red-100">
+                <div className="min-h-screen flex flex-col bg-slate-50 font-sans selection:bg-red-100 relative">
+                    {debugMsg && (
+                        <div className={`w-full text-center py-2 text-xs font-bold bg-yellow-500 text-white`}>
+                            HINWEIS: {debugMsg}
+                        </div>
+                    )}
+                    
                     <header className="bg-white border-b h-20 flex items-center justify-between px-8 shadow-sm sticky top-0 z-40">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl text-white shadow-lg" style={{ backgroundColor: THOMA_RED }}>
-                                <Icon name="graduation-cap" size={28} />
+                            <div className="p-2 rounded-xl text-white shadow-lg shadow-red-100 flex items-center justify-center" style={{ backgroundColor: THOMA_RED }}>
+                                <Icon name="shield" size={28} color="white" />
                             </div>
-                            <h1 className="font-black text-xl uppercase tracking-tighter hidden md:block">
-                                Lehrer-Konsole <span style={{ color: THOMA_RED }}>Thomaeum</span>
-                            </h1>
+                            <h1 className="font-black text-xl uppercase tracking-tighter">Medienpass <span style={{ color: THOMA_RED }}>Thomaeum</span></h1>
                         </div>
+                        
                         <div className="flex items-center gap-4">
-                            {isUpdating && <div className="flex items-center gap-2 text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full"><div className="spinner border-blue-600 !w-3 !h-3"></div> Speichert...</div>}
                             <div className="text-right hidden sm:block">
-                                <p className="text-[10px] font-black text-green-600 uppercase mb-1">Gesichert & Aktiv</p>
-                                <p className="text-xs font-bold text-slate-700">{user?.name || "Lehrkraft"}</p>
+                                <p className="text-[10px] font-black text-green-600 uppercase leading-none mb-1">MS Graph: Aktiv</p>
+                                <p className="text-xs font-bold text-slate-700">{realName || user?.userDetails || 'Schüler'}</p>
                             </div>
-                            <button onClick={handleLogout} className="text-[10px] font-black uppercase tracking-widest bg-slate-100 hover:bg-red-100 hover:text-red-600 text-slate-500 px-3 py-2 rounded-xl transition-all">Abmelden</button>
+                            <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 border-2 border-white shadow-sm overflow-hidden">
+                                <Icon name="user" size={20} />
+                            </div>
+                            <button 
+                                onClick={handleLogout}
+                                className="ml-2 text-[10px] font-black uppercase tracking-widest bg-slate-100 hover:bg-red-100 hover:text-red-600 text-slate-500 px-3 py-2 rounded-xl transition-all"
+                            >
+                                Abmelden
+                            </button>
                         </div>
                     </header>
 
-                    <div className="bg-white border-b shadow-sm p-4 sticky top-20 z-30">
-                        <div className="max-w-7xl mx-auto flex flex-wrap gap-4 items-center">
-                            <div className="relative flex-grow min-w-[200px]">
-                                <Icon name="search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input type="text" placeholder="Nachname / Vorname suchen..." className="w-full pl-10 pr-4 py-2 bg-slate-50 border rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-red-600" value={searchName} onChange={e => setSearchName(e.target.value)} />
-                            </div>
-                            
-                            <select className="bg-slate-50 border rounded-xl px-4 py-2 text-sm font-semibold outline-none focus:ring-2 focus:ring-red-600" value={filterKlasse} onChange={e => setFilterKlasse(e.target.value)}>
-                                <option value="ALL">Alle Klassen</option>
-                                {uniqueKlassen.filter(k => filterJahrgang === "ALL" || k.includes(filterJahrgang)).map(k => <option key={k} value={k}>Klasse {k}</option>)}
-                            </select>
-
-                            <select className="bg-slate-50 border rounded-xl px-4 py-2 text-sm font-semibold outline-none focus:ring-2 focus:ring-red-600" value={filterJahrgang} onChange={e => {setFilterJahrgang(e.target.value); setFilterKlasse("ALL");}}>
-                                <option value="ALL">Alle Jahrgänge</option>
-                                {uniqueJahrgaenge.map(j => <option key={j} value={j}>Jahrgang {j}</option>)}
-                            </select>
-
-                            <select className="bg-slate-50 border rounded-xl px-4 py-2 text-sm font-semibold outline-none focus:ring-2 focus:ring-red-600" value={filterModul} onChange={e => setFilterModul(e.target.value)}>
-                                <option value="ALL">Modul auswählen...</option>
-                                {ALL_MODULES.map(m => <option key={m.id} value={m.id}>Modul {m.id}: {m.title}</option>)}
-                            </select>
-                        </div>
-                        
-                        {/* Aktionsleiste Massen-Update (nur anzeigen, wenn ein spezifisches Modul UND mindestens ein weiterer Filter aktiv ist) */}
-                        {filterModul !== "ALL" && hasActiveFilters && (
-                            <div className="max-w-7xl mx-auto mt-4 p-4 bg-red-50 rounded-2xl flex flex-wrap items-center justify-between gap-4 border border-red-100">
-                                <div>
-                                    <h3 className="text-sm font-black text-slate-800 uppercase">Massen-Bearbeitung (Modul {filterModul})</h3>
-                                    <p className="text-xs font-medium text-slate-500">Wendet die Aktion auf alle {filteredStudents.length} angezeigten Schüler an.</p>
-                                </div>
-                                <div className="flex gap-2">
-                                    <button disabled={isUpdating} onClick={() => bulkToggle('revoke')} className="bg-white text-slate-700 hover:bg-slate-100 border px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all">Alle Sperren</button>
-                                    <button disabled={isUpdating} onClick={() => bulkToggle('grant')} className="text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-md" style={{ backgroundColor: THOMA_RED }}>Alle Freischalten</button>
-                                </div>
-                            </div>
-                        )}
-                        {debugMsg && <p className="text-center text-xs font-bold text-green-600 mt-2">{debugMsg}</p>}
-                    </div>
-
                     <main className="max-w-7xl mx-auto w-full p-8 flex-grow">
-                        {!hasActiveFilters ? (
-                            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-12 text-center flex flex-col items-center justify-center min-h-[400px]">
-                                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-6">
-                                    <Icon name="filter" size={40} />
+                        <div className="animate-in fade-in duration-700">
+                            
+                            <div className="rounded-[3rem] p-12 text-white shadow-2xl mb-12 relative overflow-hidden flex flex-col md:flex-row items-center justify-between" style={{ backgroundColor: THOMA_RED }}>
+                                <div className="relative z-10">
+                                    <h2 className="text-xl font-black mb-3 tracking-tight uppercase opacity-80">Portfolio von:</h2>
+                                    <div className="text-3xl md:text-4xl font-black mb-6 tracking-tighter uppercase text-white bg-white/10 px-8 py-4 rounded-[2rem] border-2 border-dashed border-white/30 inline-block">
+                                        {realName || user?.userDetails || '[Name laden...]'}
+                                    </div>
+                                    <p className="text-red-100 text-lg max-w-md font-medium leading-relaxed italic">
+                                        Die Daten werden live aus dem zentralen Microsoft-System deiner Schule geladen.
+                                    </p>
                                 </div>
-                                <h2 className="text-2xl font-black text-slate-700 mb-2 tracking-tight">Bereit für die Eingabe</h2>
-                                <p className="text-slate-500 max-w-md font-medium">Die Schülerdaten wurden erfolgreich im Hintergrund geladen. Bitte nutze die Such- und Filterleiste oben (z.B. nach Klasse oder Modul), um dir eine gezielte Auswahl anzeigen zu lassen.</p>
+                                
+                                <div className="bg-white/10 p-8 rounded-[2.5rem] backdrop-blur-md text-center border border-white/20 shadow-inner min-w-[220px] mt-8 md:mt-0">
+                                    <div className="text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-red-200">Dein Fortschritt</div>
+                                    <div className="text-7xl font-black mb-4 text-white">{progressValue}%</div>
+                                    <div className="h-2 w-full bg-white/20 rounded-full overflow-hidden relative">
+                                        <div className="bg-white h-full transition-all duration-1000" style={{ width: `${progressValue}%` }}></div>
+                                    </div>
+                                </div>
                             </div>
-                        ) : (
-                            <div className="bg-white rounded-3xl shadow-lg border overflow-hidden animate-in fade-in duration-300">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="bg-slate-50 text-slate-400 text-xs uppercase tracking-widest font-black border-b">
-                                            <th className="p-4 pl-8">Nachname</th>
-                                            <th className="p-4">Vorname</th>
-                                            <th className="p-4">Klasse</th>
-                                            <th className="p-4 text-center">
-                                                {filterModul === "ALL" ? "Gesamtfortschritt" : `Status: Modul ${filterModul}`}
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filteredStudents.length === 0 ? (
-                                            <tr><td colSpan="4" className="p-8 text-center text-slate-400 font-bold">Keine Schüler für diesen Filter gefunden.</td></tr>
-                                        ) : filteredStudents.map(student => {
-                                            const totalProgress = Math.round((student.completedTasks.length / 18) * 100);
-                                            const isModulDone = filterModul !== "ALL" && student.completedTasks.includes(parseInt(filterModul));
 
-                                            return (
-                                                <tr key={student.id} className="border-b last:border-0 hover:bg-slate-50 transition-colors">
-                                                    <td className="p-4 pl-8 font-black text-slate-800">{student.nachname || "-"}</td>
-                                                    <td className="p-4 font-semibold text-slate-600">{student.vorname || "-"}</td>
-                                                    <td className="p-4">
-                                                        <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-widest">{student.klasse}</span>
-                                                    </td>
-                                                    <td className="p-4 text-center">
-                                                        {filterModul === "ALL" ? (
-                                                            <div className="flex items-center justify-center gap-3">
-                                                                <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                                                    <div className="h-full bg-green-500" style={{ width: `${totalProgress}%` }}></div>
-                                                                </div>
-                                                                <span className="text-xs font-black text-slate-500 w-8">{totalProgress}%</span>
-                                                            </div>
-                                                        ) : (
-                                                            <button 
-                                                                disabled={isUpdating}
-                                                                onClick={() => toggleModuleSingle(student.id, parseInt(filterModul))}
-                                                                className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto transition-all ${isModulDone ? 'bg-green-500 text-white shadow-md shadow-green-200 hover:bg-red-500 hover:shadow-red-200' : 'bg-slate-100 text-slate-300 hover:bg-green-500 hover:text-white'}`}
-                                                                title={isModulDone ? "Klicken zum Entziehen" : "Klicken zum Freischalten"}
-                                                            >
-                                                                <Icon name={isModulDone ? "check" : "circle"} size={16} />
-                                                            </button>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
+                            <div className="flex gap-3 mb-12 overflow-x-auto pb-4 scrollbar-hide">
+                                {Object.keys(curriculumData).map(k => (
+                                    <button 
+                                        key={k} 
+                                        onClick={() => setActiveStage(k)} 
+                                        className={`px-10 py-5 rounded-[2rem] font-black transition-all whitespace-nowrap shadow-sm hover:shadow-md ${activeStage === k ? 'text-white scale-105 shadow-xl shadow-red-100' : 'bg-white text-slate-400 hover:bg-slate-100'}`}
+                                        style={activeStage === k ? { backgroundColor: THOMA_RED } : {}}
+                                    >
+                                        KLASSE {k}
+                                    </button>
+                                ))}
                             </div>
-                        )}
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-16 gap-y-12">
+                                {["Anwendung", "Umgang"].map(cat => (
+                                    <section key={cat}>
+                                        <div className="flex items-center gap-4 mb-8">
+                                            <div className={cat === "Anwendung" ? "bg-green-100 text-green-600 p-3 rounded-2xl flex items-center justify-center" : "bg-red-50 p-3 rounded-2xl flex items-center justify-center"} style={cat === "Umgang" ? {color: THOMA_RED} : {}}>
+                                                {cat === "Anwendung" ? <Icon name="tool" size={28} /> : <Icon name="globe" size={28} />}
+                                            </div>
+                                            <h3 className="text-2xl font-black uppercase tracking-tighter text-slate-800">
+                                                {cat === "Anwendung" ? "Skills (Anwendung)" : "Reflexion (Umgang)"}
+                                            </h3>
+                                        </div>
+                                        <div className="space-y-6">
+                                            {curriculumData[activeStage].tasks.filter(t => t.category === cat).map(t => {
+                                                const done = completedTasks.includes(t.id);
+                                                return (
+                                                    <div 
+                                                        key={t.id} 
+                                                        className={`p-8 rounded-[2.5rem] border-2 transition-all flex gap-6 relative overflow-hidden ${done ? 'bg-green-50 border-green-500 border-l-[12px] shadow-lg shadow-green-100' : 'border-slate-100 bg-white shadow-sm'}`}
+                                                        style={!done ? { borderLeftColor: THOMA_RED, borderLeftWidth: '8px' } : {}}
+                                                    >
+                                                        <div className={done ? 'text-green-600 flex items-center justify-center' : 'text-slate-200 flex items-center justify-center'}>
+                                                            {done ? <Icon name="check" size={36} /> : <Icon name="clock" size={36} />}
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <h4 className={`font-black text-xl mb-1 ${done ? 'text-green-900' : 'text-slate-900'}`}>{t.title}</h4>
+                                                            <p className={`text-sm font-medium leading-relaxed ${done ? 'text-green-700/70' : 'text-slate-400'}`}>
+                                                                {done ? "Zertifiziert & in der Datenbank hinterlegt." : t.desc}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </section>
+                                ))}
+                            </div>
+                        </div>
                     </main>
                 </div>
             );
