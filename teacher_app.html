@@ -244,7 +244,7 @@
                     
                     setStudents(prev => prev.map(s => s.id === studentId ? { ...s, completedTasks: newTasks, moduleDates: newDates } : s));
                 } catch (err) {
-                    alert("Fehler beim Speichern in SharePoint: " + err.message);
+                    alert(err.message);
                 } finally {
                     setIsUpdating(false);
                 }
@@ -301,7 +301,8 @@
                         
                         if (!res.ok) {
                             const errData = await res.json();
-                            throw new Error(errData.error?.message || "Unbekannter Graph API Fehler");
+                            console.error("GRAPH API ERROR (Bulk):", errData);
+                            throw new Error(`Graph API Fehler: ${errData.error?.message || res.statusText}`);
                         }
                         
                         return { id: student.id, tasks: newTasks, dates: newDates };
@@ -317,7 +318,7 @@
                     setDebugMsg("Massen-Update erfolgreich!");
                     setTimeout(() => setDebugMsg(""), 3000);
                 } catch (err) {
-                    alert("Fehler beim Massen-Update: " + err.message);
+                    alert("Fehler beim Massen-Update:\n" + err.message);
                 } finally {
                     setIsUpdating(false);
                 }
@@ -339,7 +340,8 @@
                 
                 if (!res.ok) {
                     const errData = await res.json();
-                    throw new Error(errData.error?.message || "Unbekannter Graph API Fehler");
+                    console.error("GRAPH API ERROR (Single):", errData);
+                    throw new Error(`Graph API Fehler:\n${errData.error?.message || res.statusText}`);
                 }
             };
 
