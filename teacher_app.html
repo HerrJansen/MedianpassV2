@@ -27,11 +27,17 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
+        // ==========================================
+        // KONFIGURATION (Gymnasium Thomaeum)
+        // ==========================================
         const MS_CONFIG = {
             tenantId: "09c4bd58-1b8c-410d-930e-816015e61028",
             clientId: "7d277b19-93c1-4df7-8f1b-d38749b3d440",
             siteId: "thomaeumde.sharepoint.com,9ef17c4d-b57b-482e-9168-3cc3bc43bc3d,d600d53b-cfd0-45f7-96a5-f1ac20222f8f",
-            listId: "08da02d9-5b67-4938-9d7e-9e9dee97fa2e"
+            listId: "08da02d9-5b67-4938-9d7e-9e9dee97fa2e",
+            
+            // Objekt-ID der dynamischen Lehrergruppe aus Entra ID
+            teacherGroupId: "2bbe9733-7137-4d54-a788-e988c3d56cd9" 
         };
         const THOMA_RED = "#BF0D3E";
 
@@ -114,47 +120,50 @@
                 bootstrap();
             }, []);
 
+            // NEU: DIE WARTUNGSFREIE GRUPPEN-PRÜFUNG
             const verifyTeacherStatus = async (account) => {
                 setLoading(true);
-                setDebugMsg("Prüfe Zugriffsrechte...");
+                setDebugMsg("Prüfe Gruppenzugehörigkeit (Entra ID)...");
                 try {
-                    const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["Sites.Read.All"], account });
-                    const token = tokenRes.accessToken;
-
-                    const listsUrl = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists`;
-                    const listsRes = await fetch(listsUrl, { headers: { Authorization: `Bearer ${token}` } });
-                    const listsData = await listsRes.json();
+                    // Wir holen ein Token, das Gruppenmitgliedschaften lesen darf
+                    const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["GroupMember.Read.All"], account });
                     
-                    const teacherList = listsData.value.find(l => l.displayName === "Medienpass Lehrer" || l.name === "Medienpass Lehrer");
+                    // Wir fragen Microsoft: In welchen Gruppen ist dieser User Mitglied?
+                    const url = `https://graph.microsoft.com/v1.0/me/memberOf`;
+                    const res = await fetch(url, { headers: { Authorization: `Bearer ${tokenRes.accessToken}` } });
                     
-                    if (!teacherList) {
-                        setDebugMsg("Sicherheits-Liste 'Medienpass Lehrer' wurde im SharePoint nicht gefunden!");
-                        setAccessDenied(true);
-                        return false;
-                    }
-
-                    const itemsUrl = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${teacherList.id}/items?$expand=fields`;
-                    const itemsRes = await fetch(itemsUrl, { headers: { Authorization: `Bearer ${token}` } });
-                    const itemsData = await itemsRes.json();
-
-                    const isTeacher = itemsData.value.some(item => item.fields.Title && item.fields.Title.toLowerCase() === account.username.toLowerCase());
+                    if (!res.ok) throw new Error("Graph API Gruppenabruf fehlgeschlagen");
+                    
+                    const data = await res.json();
+                    
+                    // Prüfen, ob die Objekt-ID eurer dynamischen Lehrergruppe in den Ergebnissen ist
+                    const isTeacher = data.value.some(group => group.id === MS_CONFIG.teacherGroupId);
 
                     if (isTeacher) {
                         setAccessDenied(false);
                         return true;
                     } else {
+                        setDebugMsg("Du bist nicht in der Lehrer-Sicherheitsgruppe eingetragen.");
                         setAccessDenied(true);
                         return false;
                     }
                 } catch (error) {
-                    setDebugMsg("Fehler bei der Rechte-Prüfung.");
+                    console.error("Rechteprüfung Fehler:", error);
+                    // Falls das leise Token-Holen fehlschlägt (z.B. weil der Admin-Consent neu ist), 
+                    // blockieren wir hier noch nicht hart, sondern lassen den User sich neu einloggen.
+                    if (error.name === "InteractionRequiredAuthError") {
+                         setDebugMsg("Bitte logge dich erneut ein, um die neuen Berechtigungen zu akzeptieren.");
+                    } else {
+                         setDebugMsg("Fehler bei der Prüfung der Gruppenmitgliedschaft.");
+                    }
                     setAccessDenied(true);
                     return false;
                 }
             };
 
             const handleLogin = async () => {
-                const tokenRequest = { scopes: ["Sites.ReadWrite.All"], prompt: "select_account" };
+                // NEU: Wir fordern beim Login direkt beide Berechtigungen an (Schreiben & Gruppen lesen)
+                const tokenRequest = { scopes: ["Sites.ReadWrite.All", "GroupMember.Read.All"], prompt: "select_account" };
                 try {
                     const response = await msalInstance.loginPopup(tokenRequest);
                     setLoading(true);
@@ -192,7 +201,6 @@
                         const f = item.fields;
                         const completedArray = f.Erledigte_Module ? f.Erledigte_Module.split(',').map(m => parseInt(m.trim())).filter(n => !isNaN(n)) : [];
                         
-                        // Einlesen der Datums-Daten
                         let parsedDates = {};
                         if (f.Modul_Daten) {
                             try { parsedDates = JSON.parse(f.Modul_Daten); } catch(e) {}
@@ -205,7 +213,7 @@
                             nachname: f.Nachname || "",
                             klasse: f.Klasse || "Unbekannt",
                             completedTasks: completedArray,
-                            moduleDates: parsedDates // Objekt mit { "ModulID": "Datum" }
+                            moduleDates: parsedDates 
                         };
                     });
                     
@@ -232,12 +240,11 @@
                         ? student.completedTasks.filter(id => id !== moduleId) 
                         : [...student.completedTasks, moduleId];
                     
-                    // Datum setzen oder entfernen
                     let newDates = { ...student.moduleDates };
                     if (isDone) {
-                        delete newDates[moduleId]; // Haken weg = Datum weg
+                        delete newDates[moduleId]; 
                     } else {
-                        newDates[moduleId] = new Date().toLocaleDateString('de-DE'); // Haken gesetzt = Heute
+                        newDates[moduleId] = new Date().toLocaleDateString('de-DE'); 
                     }
                     
                     await updateSharePoint(studentId, newTasks, newDates);
@@ -281,7 +288,6 @@
                             ? [...student.completedTasks, moduleId] 
                             : student.completedTasks.filter(id => id !== moduleId);
                         
-                        // Datum für die ganze Klasse verwalten
                         let newDates = { ...student.moduleDates };
                         if (action === "grant") {
                             newDates[moduleId] = today;
@@ -295,13 +301,15 @@
                             headers: { 'Authorization': `Bearer ${tokenRes.accessToken}`, 'Content-Type': 'application/json' },
                             body: JSON.stringify({ 
                                 "Erledigte_Module": newTasks.join(', '),
-                                "Modul_Daten": JSON.stringify(newDates) // Datums-Objekt mitsenden
+                                "Modul_Daten": JSON.stringify(newDates)
                             })
                         });
                         
                         if (!res.ok) {
                             const errData = await res.json();
-                            console.error("GRAPH API ERROR (Bulk):", errData);
+                            if (errData.error?.code === "accessDenied" || errData.error?.message?.includes("Access denied")) {
+                                throw new Error("ZUGRIFF VERWEIGERT!\n\n1. Bitte klicke oben rechts auf 'Abmelden' und logge dich neu ein.\n2. Prüfe in Azure, ob der App 'Sites.ReadWrite.All' zugestimmt wurde.");
+                            }
                             throw new Error(`Graph API Fehler: ${errData.error?.message || res.statusText}`);
                         }
                         
@@ -318,13 +326,12 @@
                     setDebugMsg("Massen-Update erfolgreich!");
                     setTimeout(() => setDebugMsg(""), 3000);
                 } catch (err) {
-                    alert("Fehler beim Massen-Update:\n" + err.message);
+                    alert(err.message);
                 } finally {
                     setIsUpdating(false);
                 }
             };
 
-            // updateSharePoint nimmt jetzt auch das Datums-Objekt entgegen
             const updateSharePoint = async (itemId, tasksArray, datesObj) => {
                 const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["Sites.ReadWrite.All"], account: msalInstance.getActiveAccount() });
                 const url = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${MS_CONFIG.listId}/items/${itemId}/fields`;
@@ -334,13 +341,15 @@
                     headers: { 'Authorization': `Bearer ${tokenRes.accessToken}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         "Erledigte_Module": tasksArray.join(', '),
-                        "Modul_Daten": JSON.stringify(datesObj) // Wird als String in die neue Spalte geschrieben
+                        "Modul_Daten": JSON.stringify(datesObj)
                     })
                 });
                 
                 if (!res.ok) {
                     const errData = await res.json();
-                    console.error("GRAPH API ERROR (Single):", errData);
+                    if (errData.error?.code === "accessDenied" || errData.error?.message?.includes("Access denied")) {
+                        throw new Error("ZUGRIFF VERWEIGERT!\n\n1. Bitte klicke oben rechts auf 'Abmelden' und logge dich neu ein.\n2. Prüfe in Azure, ob der App 'Sites.ReadWrite.All' zugestimmt wurde.");
+                    }
                     throw new Error(`Graph API Fehler:\n${errData.error?.message || res.statusText}`);
                 }
             };
@@ -372,7 +381,7 @@
                                 <Icon name="shield-alert" size={48} />
                             </div>
                             <h2 className="text-2xl font-black mb-4 uppercase tracking-tighter text-slate-800">Zugriff verweigert</h2>
-                            <p className="text-slate-500 mb-8 font-medium">Dein Konto steht nicht in der SharePoint-Liste <b>"Medienpass Lehrer"</b>. Diese App ist ausschließlich für das berechtigte Kollegium freigegeben.</p>
+                            <p className="text-slate-500 mb-8 font-medium">Dein Konto ist nicht in der Gruppe <b>"LehrerPlusReferendare"</b> eingetragen. Diese App ist ausschließlich für das berechtigte Kollegium freigegeben.</p>
                             <button onClick={handleLogout} className="w-full bg-slate-100 text-slate-600 hover:bg-slate-200 font-black uppercase px-8 py-4 rounded-2xl transition-all shadow-sm">
                                 Abmelden / Zurück
                             </button>
@@ -452,7 +461,6 @@
                             </select>
                         </div>
                         
-                        {/* Aktionsleiste Massen-Update */}
                         {filterModul !== "ALL" && hasActiveFilters && (
                             <div className="max-w-7xl mx-auto mt-4 p-4 bg-red-50 rounded-2xl flex flex-wrap items-center justify-between gap-4 border border-red-100">
                                 <div>
