@@ -2,8 +2,8 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medienpass Thomaeum</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mein Medienpass | Gymnasium Thomaeum</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -13,10 +13,11 @@
     <script type="text/javascript" src="https://alcdn.msauth.net/browser/2.32.2/js/msal-browser.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         :root { --thomaeum-red: #BF0D3E; }
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
+        .spinner { border: 3px solid rgba(0,0,0,0.1); border-left-color: var(--thomaeum-red); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -25,13 +26,13 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
+        // --- KONFIGURATION ---
         const MS_CONFIG = {
             tenantId: "09c4bd58-1b8c-410d-930e-816015e61028",
             clientId: "7d277b19-93c1-4df7-8f1b-d38749b3d440",
             siteId: "thomaeumde.sharepoint.com,9ef17c4d-b57b-482e-9168-3cc3bc43bc3d,d600d53b-cfd0-45f7-96a5-f1ac20222f8f",
             listId: "08da02d9-5b67-4938-9d7e-9e9dee97fa2e"
         };
-
         const THOMA_RED = "#BF0D3E";
 
         const msalConfig = {
@@ -39,67 +40,63 @@
                 clientId: MS_CONFIG.clientId,
                 authority: `https://login.microsoftonline.com/${MS_CONFIG.tenantId}`,
                 redirectUri: window.location.origin,
-                navigateToLoginRequestUrl: false
+                navigateToLoginRequestUrl: true // WICHTIG FÜR HANDYS
             },
-            cache: { cacheLocation: "localStorage", storeAuthStateInCookie: true }
+            cache: { cacheLocation: "localStorage", storeAuthStateInCookie: true } // Cookie Fallback für Safari
         };
+        
         const msalInstance = new msal.PublicClientApplication(msalConfig);
-        const msalInitPromise = msalInstance.initialize(); 
+        const msalInitPromise = msalInstance.initialize();
 
-        const Icon = ({ name, size = 24, className = "", color = "currentColor" }) => {
-            const icons = {
-                shield: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>,
-                check: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12" /></svg>,
-                clock: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
-                user: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>,
-                tool: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 19 7-7 3 3-7 7-3-3z" /><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /></svg>,
-                globe: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>,
-                calendar: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-            };
-            return icons[name] || null;
-        };
+        const ALL_MODULES = [
+            { id: 1, title: "Hardware-Führerschein", stage: "5-6" }, { id: 2, title: "Dateimanagement", stage: "5-6" }, { id: 3, title: "Textverarbeitung I", stage: "5-6" },
+            { id: 4, title: "Netiquette", stage: "5-6" }, { id: 5, title: "Prävention", stage: "5-6" }, { id: 6, title: "Suchmaschinen", stage: "5-6" },
+            { id: 7, title: "Präsentationsprofi", stage: "7-8" }, { id: 8, title: "Medienproduktion", stage: "7-8" }, { id: 9, title: "Tabellenkalkulation", stage: "7-8" },
+            { id: 10, title: "Urheberrecht", stage: "7-8" }, { id: 11, title: "Quellenkritik", stage: "7-8" }, { id: 12, title: "Datenschutz", stage: "7-8" },
+            { id: 13, title: "KI-Produktivität", stage: "9-10" }, { id: 14, title: "Digitale Bewerbung", stage: "9-10" }, { id: 15, title: "Projektmanagement", stage: "9-10" },
+            { id: 16, title: "KI-Ethik", stage: "9-10" }, { id: 17, title: "Zivilcourage", stage: "9-10" }, { id: 18, title: "Digitaler Fußabdruck", stage: "9-10" }
+        ];
 
-        const curriculumData = {
-            "5-6": { tasks: [{ id: 1, category: "Anwendung", title: "Hardware-Führerschein", desc: "Geräte bedienen." }, { id: 2, category: "Anwendung", title: "Dateimanagement", desc: "Cloud-Strukturen." }, { id: 3, category: "Anwendung", title: "Textverarbeitung I", desc: "Layouts & PDF." }, { id: 4, category: "Umgang", title: "Netiquette", desc: "Klassenchat." }, { id: 5, category: "Umgang", title: "Prävention", desc: "Cybermobbing." }, { id: 6, category: "Umgang", title: "Suchmaschinen", desc: "Sicher recherchieren." }] },
-            "7-8": { tasks: [{ id: 7, category: "Anwendung", title: "Präsentationsprofi", desc: "Vortrag." }, { id: 8, category: "Anwendung", title: "Medienproduktion", desc: "Video-Schnitt." }, { id: 9, category: "Anwendung", title: "Tabellenkalkulation", desc: "Daten visualisieren." }, { id: 10, category: "Umgang", title: "Urheberrecht", desc: "Lizenzen." }, { id: 11, category: "Umgang", title: "Quellenkritik", desc: "Fake News." }, { id: 12, category: "Umgang", title: "Datenschutz", desc: "Privatsphäre." }] },
-            "9-10": { tasks: [{ id: 13, category: "Anwendung", title: "KI-Produktivität", desc: "Prompting." }, { id: 14, category: "Anwendung", title: "Digitale Bewerbung", desc: "Profile." }, { id: 15, category: "Anwendung", title: "Projektmanagement", desc: "Agiles Arbeiten." }, { id: 16, category: "Umgang", title: "KI-Ethik", desc: "Algorithmen." }, { id: 17, category: "Umgang", title: "Zivilcourage", desc: "Hate Speech." }, { id: 18, category: "Umgang", title: "Digitaler Fußabdruck", desc: "Biografie." }] }
+        const Icon = ({ name, size = 20, className = "" }) => {
+            const [svg, setSvg] = useState("");
+            useEffect(() => {
+                if (window.lucide && window.lucide.icons[name]) {
+                    setSvg(window.lucide.icons[name].toSvg({ width: size, height: size, class: className }));
+                }
+            }, [name, size, className]);
+            return <span className="inline-flex items-center justify-center" dangerouslySetInnerHTML={{ __html: svg }} />;
         };
 
         const App = () => {
             const [user, setUser] = useState(null);
-            const [realName, setRealName] = useState(""); 
-            const [completedTasks, setCompletedTasks] = useState([]);
-            const [moduleDates, setModuleDates] = useState({}); // NEU: Speichert die Freischalt-Daten
-            const [activeStage, setActiveStage] = useState("5-6");
+            const [studentData, setStudentData] = useState(null);
             const [loading, setLoading] = useState(true);
             const [authRequired, setAuthRequired] = useState(false);
-            const [debugMsg, setDebugMsg] = useState("");
+            const [errorMsg, setErrorMsg] = useState("");
 
             useEffect(() => {
                 const bootstrap = async () => {
                     try {
-                        setDebugMsg("Lade Microsoft Authentifizierung...");
                         await msalInitPromise;
                         
-                        const redirectResponse = await msalInstance.handleRedirectPromise();
-                        if (redirectResponse && redirectResponse.account) {
-                            msalInstance.setActiveAccount(redirectResponse.account);
-                            setUser({ userDetails: redirectResponse.account.username });
-                            fetchSharePointData(redirectResponse.account.username, redirectResponse.accessToken);
-                            return;
+                        // CRITICAL FOR MOBILE: Verarbeitet die Rückkehr vom Microsoft-Login
+                        await msalInstance.handleRedirectPromise();
+                        
+                        let activeAccount = msalInstance.getActiveAccount();
+                        if (!activeAccount && msalInstance.getAllAccounts().length > 0) {
+                            activeAccount = msalInstance.getAllAccounts()[0];
+                            msalInstance.setActiveAccount(activeAccount);
                         }
 
-                        const activeAccount = msalInstance.getActiveAccount() || msalInstance.getAllAccounts()[0];
                         if (activeAccount) {
-                            msalInstance.setActiveAccount(activeAccount);
-                            setUser({ userDetails: activeAccount.username });
-                            fetchSharePointData(activeAccount.username);
+                            setUser({ name: activeAccount.name, username: activeAccount.username });
+                            fetchMyData(activeAccount);
                         } else {
                             setAuthRequired(true);
                             setLoading(false);
                         }
                     } catch (err) {
-                        console.error("Auth Bootstrap Fehler:", err);
+                        console.error(err);
                         setAuthRequired(true);
                         setLoading(false);
                     }
@@ -107,177 +104,175 @@
                 bootstrap();
             }, []);
 
-            const handleLogin = async () => {
-                const tokenRequest = { scopes: ["Sites.Read.All"], prompt: "select_account" };
-                try {
-                    const response = await msalInstance.loginPopup(tokenRequest);
-                    setLoading(true);
-                    msalInstance.setActiveAccount(response.account);
-                    setUser({ userDetails: response.account.username });
-                    setAuthRequired(false);
-                    fetchSharePointData(response.account.username, response.accessToken);
-                } catch (error) {
-                    if (error.name === "BrowserAuthError" || error.message.includes("popup")) {
-                        msalInstance.loginRedirect(tokenRequest);
-                    }
-                }
+            // MOBILE FIX: Nur noch Redirect nutzen, keine Popups mehr!
+            const handleLogin = () => {
+                setLoading(true);
+                msalInstance.loginRedirect({ scopes: ["Sites.Read.All"] });
             };
 
-            const handleLogout = () => msalInstance.logoutRedirect({ postLogoutRedirectUri: window.location.origin });
+            const handleLogout = () => {
+                msalInstance.logoutRedirect({ postLogoutRedirectUri: window.location.origin });
+            };
 
-            const fetchSharePointData = async (userEmail, preFetchedToken = null) => {
-                setLoading(true);
+            const fetchMyData = async (account) => {
                 try {
-                    setDebugMsg("Lade dein Portfolio...");
-                    let token = preFetchedToken;
+                    const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["Sites.Read.All"], account });
                     
-                    if (!token) {
-                        const account = msalInstance.getActiveAccount();
-                        const response = await msalInstance.acquireTokenSilent({ scopes: ["Sites.Read.All"], account: account });
-                        token = response.accessToken;
-                    }
+                    const url = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${MS_CONFIG.listId}/items?$expand=fields&$top=999`;
+                    const res = await fetch(url, { headers: { Authorization: `Bearer ${tokenRes.accessToken}` }});
+                    
+                    if (!res.ok) throw new Error("Fehler beim Abrufen der SharePoint-Daten.");
+                    const data = await res.json();
+                    
+                    // Finde genau den Datensatz des eingeloggten Schülers
+                    const myRecord = data.value.find(item => 
+                        item.fields.Title && item.fields.Title.toLowerCase() === account.username.toLowerCase()
+                    );
 
-                    const graphUrl = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${MS_CONFIG.listId}/items?$expand=fields`;
-                    const res = await fetch(graphUrl, { headers: { Authorization: `Bearer ${token}` } });
-                    
-                    if (res.ok) {
-                        const data = await res.json();
-                        const studentRow = data.value.find(item => item.fields.Title && item.fields.Title.toLowerCase() === userEmail.toLowerCase());
+                    if (myRecord) {
+                        const f = myRecord.fields;
+                        const completedArray = f.Erledigte_Module ? f.Erledigte_Module.split(',').map(m => parseInt(m.trim())).filter(n => !isNaN(n)) : [];
                         
-                        if (studentRow) {
-                            const vorname = studentRow.fields.Vorname || "";
-                            const nachname = studentRow.fields.Nachname || "";
-                            if (vorname || nachname) setRealName(`${vorname} ${nachname}`.trim());
-
-                            if (studentRow.fields.Erledigte_Module) {
-                                setCompletedTasks(studentRow.fields.Erledigte_Module.split(',').map(m => parseInt(m.trim())));
-                            }
-                            
-                            // NEU: Datums-Daten abrufen
-                            if (studentRow.fields.Modul_Daten) {
-                                try {
-                                    setModuleDates(JSON.parse(studentRow.fields.Modul_Daten));
-                                } catch(e) {
-                                    console.error("Datum konnte nicht gelesen werden", e);
-                                }
-                            }
-                            setDebugMsg(""); 
-                        } else {
-                            setDebugMsg(`Konto (${userEmail}) noch nicht in der Datenbank.`);
+                        let parsedDates = {};
+                        if (f.Modul_Daten) {
+                            try { parsedDates = JSON.parse(f.Modul_Daten); } catch(e) {}
                         }
+
+                        setStudentData({
+                            vorname: f.Vorname || "",
+                            nachname: f.Nachname || "",
+                            klasse: f.Klasse || "",
+                            completedTasks: completedArray,
+                            moduleDates: parsedDates
+                        });
+                    } else {
+                        setErrorMsg("Deine E-Mail-Adresse wurde noch nicht in die Datenbank eingetragen. Bitte melde dich bei deiner Lehrkraft.");
                     }
                 } catch (error) {
-                    console.error(error);
-                    setAuthRequired(true);
+                    if (error.name === "InteractionRequiredAuthError") {
+                        // Wenn Safari zickt, erzwingen wir den Login neu
+                        msalInstance.loginRedirect({ scopes: ["Sites.Read.All"] });
+                    } else {
+                        setErrorMsg("Fehler beim Laden deiner Daten.");
+                    }
                 } finally {
                     setLoading(false);
                 }
             };
 
-            const progressValue = Math.round((completedTasks.length / 18) * 100);
+            if (loading) {
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6">
+                        <div className="spinner mb-6"></div>
+                        <p className="text-sm font-black uppercase text-slate-400 tracking-widest text-center">Lade Profil...</p>
+                    </div>
+                );
+            }
 
             if (authRequired) {
                 return (
                     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6">
-                        <div className="bg-white p-10 rounded-[3rem] shadow-2xl max-w-md w-full text-center border">
-                            <div className="mx-auto w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6 text-red-600"><Icon name="shield" size={48} /></div>
-                            <h2 className="text-2xl font-black mb-4 uppercase tracking-tighter text-slate-800">Datenzugriff erlauben</h2>
-                            <p className="text-slate-500 mb-6 font-medium">Klicke auf den Button, um dich sicher mit deinem Office 365 Schulkonto zu verbinden.</p>
-                            <button onClick={handleLogin} className="w-full text-white font-black uppercase px-8 py-4 rounded-2xl transition-all shadow-lg hover:scale-105" style={{ backgroundColor: THOMA_RED }}>Mit Microsoft verbinden</button>
+                        <div className="bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-2xl max-w-md w-full text-center border border-slate-100">
+                            <div className="mx-auto w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 text-[#BF0D3E] shadow-sm">
+                                <Icon name="graduation-cap" size={40} />
+                            </div>
+                            <h2 className="text-2xl sm:text-3xl font-black mb-3 uppercase tracking-tighter text-slate-800">Medienpass</h2>
+                            <p className="text-slate-500 mb-8 font-medium text-sm sm:text-base leading-relaxed">Bitte melde dich mit deiner Schul-E-Mail-Adresse an, um deinen Fortschritt zu sehen.</p>
+                            <button 
+                                onClick={handleLogin} 
+                                className="w-full text-white font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all shadow-lg active:scale-95" 
+                                style={{ backgroundColor: THOMA_RED }}>
+                                Anmelden
+                            </button>
                         </div>
                     </div>
                 );
             }
 
-            if (loading) {
+            if (errorMsg) {
                 return (
-                    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-                        <div className="w-12 h-12 border-4 border-slate-200 border-t-red-600 rounded-full animate-spin mb-4"></div>
-                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{debugMsg || "Lade Medienpass..."}</p>
+                    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6">
+                        <div className="bg-white p-8 rounded-[2.5rem] shadow-xl max-w-md w-full text-center border border-red-100">
+                            <div className="mx-auto w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 text-red-500">
+                                <Icon name="user-x" size={32} />
+                            </div>
+                            <h2 className="text-xl font-black mb-2 text-slate-800">Kein Profil gefunden</h2>
+                            <p className="text-slate-500 mb-6 text-sm">{errorMsg}</p>
+                            <button onClick={handleLogout} className="bg-slate-100 text-slate-600 font-bold uppercase px-6 py-3 rounded-xl w-full">Abmelden</button>
+                        </div>
                     </div>
                 );
             }
+
+            const totalCompleted = studentData ? studentData.completedTasks.length : 0;
+            const progressPercent = Math.round((totalCompleted / 18) * 100);
 
             return (
-                <div className="min-h-screen flex flex-col bg-slate-50 font-sans selection:bg-red-100">
-                    <header className="bg-white border-b h-20 flex items-center justify-between px-8 shadow-sm sticky top-0 z-40">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl text-white shadow-lg shadow-red-100 flex items-center justify-center" style={{ backgroundColor: THOMA_RED }}><Icon name="shield" size={28} color="white" /></div>
-                            <h1 className="font-black text-xl uppercase tracking-tighter">Medienpass <span style={{ color: THOMA_RED }}>Thomaeum</span></h1>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <div className="text-right hidden sm:block">
-                                <p className="text-[10px] font-black text-green-600 uppercase leading-none mb-1">MS Graph: Aktiv</p>
-                                <p className="text-xs font-bold text-slate-700">{realName || user?.userDetails || 'Schüler'}</p>
+                <div className="min-h-screen flex flex-col bg-slate-50 font-sans pb-10">
+                    {/* Header - Mobile Optimiert */}
+                    <header className="bg-[#BF0D3E] text-white pt-12 pb-6 px-6 sm:px-8 shadow-md rounded-b-[2rem] sm:rounded-b-[3rem] relative z-10">
+                        <div className="max-w-4xl mx-auto flex justify-between items-start">
+                            <div>
+                                <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter mb-1">Hallo {studentData?.vorname}!</h1>
+                                <p className="text-red-200 font-bold text-sm sm:text-base opacity-90">Klasse {studentData?.klasse} • Gymnasium Thomaeum</p>
                             </div>
-                            <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 border-2 border-white shadow-sm overflow-hidden"><Icon name="user" size={20} /></div>
-                            <button onClick={handleLogout} className="ml-2 text-[10px] font-black uppercase tracking-widest bg-slate-100 hover:bg-red-100 hover:text-red-600 text-slate-500 px-3 py-2 rounded-xl transition-all">Abmelden</button>
+                            <button onClick={handleLogout} className="bg-white/20 hover:bg-white/30 text-white p-3 rounded-xl transition-colors">
+                                <Icon name="log-out" size={20} />
+                            </button>
+                        </div>
+                        
+                        {/* Fortschrittsbalken */}
+                        <div className="max-w-4xl mx-auto mt-8 bg-black/10 p-5 rounded-3xl backdrop-blur-sm">
+                            <div className="flex justify-between items-end mb-3">
+                                <span className="font-black uppercase tracking-widest text-xs sm:text-sm text-white">Dein Fortschritt</span>
+                                <span className="font-black text-2xl sm:text-3xl text-white">{progressPercent}%</span>
+                            </div>
+                            <div className="h-4 bg-black/20 rounded-full overflow-hidden shadow-inner">
+                                <div className="h-full bg-white rounded-full transition-all duration-1000 ease-out" style={{ width: `${progressPercent}%` }}></div>
+                            </div>
+                            <p className="text-right mt-2 text-[10px] font-bold text-red-200 uppercase">{totalCompleted} von 18 Modulen geschafft</p>
                         </div>
                     </header>
 
-                    <main className="max-w-7xl mx-auto w-full p-8 flex-grow">
-                        <div className="animate-in fade-in duration-700">
-                            
-                            <div className="rounded-[3rem] p-12 text-white shadow-2xl mb-12 relative overflow-hidden flex flex-col md:flex-row items-center justify-between" style={{ backgroundColor: THOMA_RED }}>
-                                <div className="relative z-10">
-                                    <h2 className="text-xl font-black mb-3 tracking-tight uppercase opacity-80">Portfolio von:</h2>
-                                    <div className="text-3xl md:text-4xl font-black mb-6 tracking-tighter uppercase text-white bg-white/10 px-8 py-4 rounded-[2rem] border-2 border-dashed border-white/30 inline-block">{realName || user?.userDetails || '[Name laden...]'}</div>
-                                    <p className="text-red-100 text-lg max-w-md font-medium leading-relaxed italic">Die Daten werden live aus dem zentralen Microsoft-System deiner Schule geladen.</p>
-                                </div>
-                                <div className="bg-white/10 p-8 rounded-[2.5rem] backdrop-blur-md text-center border border-white/20 shadow-inner min-w-[220px] mt-8 md:mt-0">
-                                    <div className="text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-red-200">Dein Fortschritt</div>
-                                    <div className="text-7xl font-black mb-4 text-white">{progressValue}%</div>
-                                    <div className="h-2 w-full bg-white/20 rounded-full overflow-hidden relative">
-                                        <div className="bg-white h-full transition-all duration-1000" style={{ width: `${progressValue}%` }}></div>
+                    {/* Content / Module - Grid für Handys optimiert */}
+                    <main className="flex-grow max-w-4xl mx-auto w-full px-4 sm:px-8 mt-[-1rem] sm:mt-[-2rem] relative z-20">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 pt-8">
+                            {ALL_MODULES.map(modul => {
+                                const isDone = studentData?.completedTasks.includes(modul.id);
+                                const dateDone = studentData?.moduleDates[modul.id];
+
+                                return (
+                                    <div key={modul.id} className={`bg-white rounded-3xl p-5 sm:p-6 border-2 transition-all ${isDone ? 'border-green-400 shadow-green-100 shadow-lg' : 'border-slate-100 shadow-sm'}`}>
+                                        <div className="flex justify-between items-start mb-4">
+                                            <span className="text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 px-3 py-1 rounded-lg">Klasse {modul.stage}</span>
+                                            {isDone ? (
+                                                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white shadow-md">
+                                                    <Icon name="check" size={16} />
+                                                </div>
+                                            ) : (
+                                                <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-300">
+                                                    <Icon name="lock" size={14} />
+                                                </div>
+                                            )}
+                                        </div>
+                                        
+                                        <h3 className={`font-black text-lg sm:text-xl tracking-tight leading-tight mb-2 ${isDone ? 'text-slate-800' : 'text-slate-500'}`}>
+                                            {modul.title}
+                                        </h3>
+                                        
+                                        {isDone ? (
+                                            <p className="text-xs font-bold text-green-600 flex items-center gap-1 mt-3">
+                                                <Icon name="calendar-check" size={12} />
+                                                Zertifiziert am {dateDone || "—"}
+                                            </p>
+                                        ) : (
+                                            <p className="text-xs font-medium text-slate-400 mt-3">
+                                                Noch nicht freigeschaltet.
+                                            </p>
+                                        )}
                                     </div>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-3 mb-12 overflow-x-auto pb-4 scrollbar-hide">
-                                {Object.keys(curriculumData).map(k => (
-                                    <button key={k} onClick={() => setActiveStage(k)} className={`px-10 py-5 rounded-[2rem] font-black transition-all whitespace-nowrap shadow-sm hover:shadow-md ${activeStage === k ? 'text-white scale-105 shadow-xl shadow-red-100' : 'bg-white text-slate-400 hover:bg-slate-100'}`} style={activeStage === k ? { backgroundColor: THOMA_RED } : {}}>KLASSE {k}</button>
-                                ))}
-                            </div>
-
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-16 gap-y-12">
-                                {["Anwendung", "Umgang"].map(cat => (
-                                    <section key={cat}>
-                                        <div className="flex items-center gap-4 mb-8">
-                                            <div className={cat === "Anwendung" ? "bg-green-100 text-green-600 p-3 rounded-2xl flex items-center justify-center" : "bg-red-50 p-3 rounded-2xl flex items-center justify-center"} style={cat === "Umgang" ? {color: THOMA_RED} : {}}>
-                                                {cat === "Anwendung" ? <Icon name="tool" size={28} /> : <Icon name="globe" size={28} />}
-                                            </div>
-                                            <h3 className="text-2xl font-black uppercase tracking-tighter text-slate-800">{cat === "Anwendung" ? "Skills (Anwendung)" : "Reflexion (Umgang)"}</h3>
-                                        </div>
-                                        <div className="space-y-6">
-                                            {curriculumData[activeStage].tasks.filter(t => t.category === cat).map(t => {
-                                                const done = completedTasks.includes(t.id);
-                                                const dateStr = moduleDates[t.id]; // Holt das Datum, falls vorhanden
-                                                
-                                                return (
-                                                    <div key={t.id} className={`p-8 rounded-[2.5rem] border-2 transition-all flex gap-6 items-center relative overflow-hidden ${done ? 'bg-green-50 border-green-500 border-l-[12px] shadow-lg shadow-green-100' : 'border-slate-100 bg-white shadow-sm'}`} style={!done ? { borderLeftColor: THOMA_RED, borderLeftWidth: '8px' } : {}}>
-                                                        <div className={done ? 'text-green-600' : 'text-slate-200'}>
-                                                            {done ? <Icon name="check" size={36} /> : <Icon name="clock" size={36} />}
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <h4 className={`font-black text-xl mb-1 ${done ? 'text-green-900' : 'text-slate-900'}`}>{t.title}</h4>
-                                                            {done ? (
-                                                                <div className="flex items-center gap-2 mt-2">
-                                                                    <span className="bg-green-100 text-green-800 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 shadow-sm border border-green-200">
-                                                                        {dateStr && <Icon name="calendar" size={14} />}
-                                                                        {dateStr ? `Freigeschaltet am ${dateStr}` : "Erfolgreich zertifiziert"}
-                                                                    </span>
-                                                                </div>
-                                                            ) : (
-                                                                <p className="text-sm font-medium leading-relaxed text-slate-400">{t.desc}</p>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </section>
-                                ))}
-                            </div>
+                                );
+                            })}
                         </div>
                     </main>
                 </div>
