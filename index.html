@@ -73,6 +73,7 @@
             const [loading, setLoading] = useState(true);
             const [authRequired, setAuthRequired] = useState(false);
             const [errorMsg, setErrorMsg] = useState("");
+            const [activeStage, setActiveStage] = useState("5-6"); // NEU: Zustand für den aktuell gewählten Jahrgang
 
             useEffect(() => {
                 const bootstrap = async () => {
@@ -236,8 +237,23 @@
 
                     {/* Content / Module - Grid für Handys optimiert */}
                     <main className="flex-grow max-w-4xl mx-auto w-full px-4 sm:px-8 mt-[-1rem] sm:mt-[-2rem] relative z-20">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 pt-8">
-                            {ALL_MODULES.map(modul => {
+                        
+                        {/* NEU: Navigation für die Jahrgangsstufen */}
+                        <div className="flex gap-3 mb-2 overflow-x-auto pb-4 scrollbar-hide pt-4 sm:pt-6">
+                            {["5-6", "7-8", "9-10"].map(stage => (
+                                <button 
+                                    key={stage} 
+                                    onClick={() => setActiveStage(stage)} 
+                                    className={`px-6 py-3 rounded-2xl font-black transition-all whitespace-nowrap shadow-sm ${activeStage === stage ? 'text-white shadow-md scale-105' : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'}`} 
+                                    style={activeStage === stage ? { backgroundColor: THOMA_RED } : {}}
+                                >
+                                    Klasse {stage}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                            {ALL_MODULES.filter(m => m.stage === activeStage).map(modul => {
                                 const isDone = studentData?.completedTasks.includes(modul.id);
                                 const dateDone = studentData?.moduleDates[modul.id];
 
