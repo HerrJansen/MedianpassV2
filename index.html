@@ -50,12 +50,12 @@
         const msalInitPromise = msalInstance.initialize();
 
         const ALL_MODULES = [
-            { id: 1, title: "Hardware-Führerschein", stage: "5-6" }, { id: 2, title: "Dateimanagement", stage: "5-6" }, { id: 3, title: "Textverarbeitung I", stage: "5-6" },
-            { id: 4, title: "Netiquette", stage: "5-6" }, { id: 5, title: "Prävention", stage: "5-6" }, { id: 6, title: "Suchmaschinen", stage: "5-6" },
-            { id: 7, title: "Präsentationsprofi", stage: "7-8" }, { id: 8, title: "Medienproduktion", stage: "7-8" }, { id: 9, title: "Tabellenkalkulation", stage: "7-8" },
-            { id: 10, title: "Urheberrecht", stage: "7-8" }, { id: 11, title: "Quellenkritik", stage: "7-8" }, { id: 12, title: "Datenschutz", stage: "7-8" },
-            { id: 13, title: "KI-Produktivität", stage: "9-10" }, { id: 14, title: "Digitale Bewerbung", stage: "9-10" }, { id: 15, title: "Projektmanagement", stage: "9-10" },
-            { id: 16, title: "KI-Ethik", stage: "9-10" }, { id: 17, title: "Zivilcourage", stage: "9-10" }, { id: 18, title: "Digitaler Fußabdruck", stage: "9-10" }
+            { id: 1, title: "Hardware-Führerschein", stage: "5-6", category: "skills" }, { id: 2, title: "Dateimanagement", stage: "5-6", category: "skills" }, { id: 3, title: "Textverarbeitung I", stage: "5-6", category: "skills" },
+            { id: 4, title: "Netiquette", stage: "5-6", category: "reflexion" }, { id: 5, title: "Prävention", stage: "5-6", category: "reflexion" }, { id: 6, title: "Suchmaschinen", stage: "5-6", category: "reflexion" },
+            { id: 7, title: "Präsentationsprofi", stage: "7-8", category: "skills" }, { id: 8, title: "Medienproduktion", stage: "7-8", category: "skills" }, { id: 9, title: "Tabellenkalkulation", stage: "7-8", category: "skills" },
+            { id: 10, title: "Urheberrecht", stage: "7-8", category: "reflexion" }, { id: 11, title: "Quellenkritik", stage: "7-8", category: "reflexion" }, { id: 12, title: "Datenschutz", stage: "7-8", category: "reflexion" },
+            { id: 13, title: "KI-Produktivität", stage: "9-10", category: "skills" }, { id: 14, title: "Digitale Bewerbung", stage: "9-10", category: "skills" }, { id: 15, title: "Projektmanagement", stage: "9-10", category: "skills" },
+            { id: 16, title: "KI-Ethik", stage: "9-10", category: "reflexion" }, { id: 17, title: "Zivilcourage", stage: "9-10", category: "reflexion" }, { id: 18, title: "Digitaler Fußabdruck", stage: "9-10", category: "reflexion" }
         ];
 
         const Icon = ({ name, size = 20, className = "" }) => {
@@ -364,19 +364,23 @@
                         {/* Navigation für die Jahrgangsstufen */}
                         <div className="flex gap-3 mb-2 overflow-x-auto pb-4 scrollbar-hide pt-4 sm:pt-6">
                             {["5-6", "7-8", "9-10"].map(stage => (
-                                <button 
-                                    key={stage} 
-                                    onClick={() => setActiveStage(stage)} 
-                                    className={`px-6 py-3 rounded-2xl font-black transition-all whitespace-nowrap shadow-sm ${activeStage === stage ? 'text-white shadow-md scale-105' : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'}`} 
-                                    style={activeStage === stage ? { backgroundColor: THOMA_RED } : {}}
-                                >
-                                    Klasse {stage}
-                                </button>
-                            ))}
-                        </div>
+                            <button 
+                                key={stage} 
+                                onClick={() => setActiveStage(stage)} 
+                                className={`px-6 py-3 rounded-2xl font-black transition-all whitespace-nowrap shadow-sm ${activeStage === stage ? 'text-white shadow-md scale-105' : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'}`} 
+                                style={activeStage === stage ? { backgroundColor: THOMA_RED } : {}}
+                            >
+                                Klasse {stage}
+                            </button>
+                        ))}
+                    </div>
 
+                    <div className="mb-10">
+                        <h3 className="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
+                            <Icon name="wrench" size={24} className="text-[#BF0D3E]" /> Skills (Anwendung)
+                        </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                            {ALL_MODULES.filter(m => m.stage === activeStage).map(modul => {
+                            {ALL_MODULES.filter(m => m.stage === activeStage && m.category === 'skills').map(modul => {
                                 const isDone = studentData?.completedTasks.includes(modul.id);
                                 const dateDone = studentData?.moduleDates[modul.id];
 
@@ -426,10 +430,68 @@
                                 );
                             })}
                         </div>
-                    </main>
-                </div>
-            );
-        };
+                    </div>
+
+                    <div className="mb-4">
+                        <h3 className="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
+                            <Icon name="brain" size={24} className="text-[#BF0D3E]" /> Reflexion (Umgang)
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                            {ALL_MODULES.filter(m => m.stage === activeStage && m.category === 'reflexion').map(modul => {
+                                const isDone = studentData?.completedTasks.includes(modul.id);
+                                const dateDone = studentData?.moduleDates[modul.id];
+
+                                return (
+                                    <div 
+                                        key={modul.id} 
+                                        onClick={() => { if (isDone) setSelectedModule(modul); }}
+                                        className={`bg-white rounded-3xl p-5 sm:p-6 border-2 transition-all flex flex-col h-full ${isDone ? 'border-green-400 shadow-green-100 shadow-lg cursor-pointer hover:-translate-y-1 hover:shadow-xl' : 'border-slate-100 shadow-sm opacity-90'}`}
+                                    >
+                                        <div className="flex justify-between items-start mb-4">
+                                            <span className="text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 px-3 py-1 rounded-lg">Klasse {modul.stage}</span>
+                                            {isDone ? (
+                                                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white shadow-md">
+                                                    <Icon name="check" size={16} />
+                                                </div>
+                                            ) : (
+                                                <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-300">
+                                                    <Icon name="lock" size={14} />
+                                                </div>
+                                            )}
+                                        </div>
+                                        
+                                        <h3 className={`font-black text-lg sm:text-xl tracking-tight leading-tight mb-2 ${isDone ? 'text-slate-800' : 'text-slate-500'}`}>
+                                            {modul.title}
+                                        </h3>
+                                        
+                                        <div className="mt-auto">
+                                            {isDone ? (
+                                                <div>
+                                                    <p className="text-xs font-bold text-green-600 flex items-center gap-1 mt-3 mb-4">
+                                                        <Icon name="calendar-check" size={12} />
+                                                        Am {dateDone || "—"}
+                                                    </p>
+                                                    <div className="pt-3 border-t border-slate-100 text-center">
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-[#BF0D3E] flex items-center justify-center gap-2 group-hover:text-red-700">
+                                                            <Icon name="book-open" size={14} /> Wissensspeicher öffnen
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <p className="text-xs font-medium text-slate-400 mt-3">
+                                                    Noch nicht freigeschaltet.
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </main>
+            </div>
+        );
+    };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
