@@ -135,7 +135,7 @@
                                     <div 
                                         key={modul.id} 
                                         onClick={() => !isUpdating && onToggleModule(modul.id)}
-                                        title={isDone ? "Klicken zum Sperren" : "Klicken zum Freischalten"}
+                                        title={isDone ? "Klicken zum Zurücksetzen" : "Klicken zum Freischalten"}
                                         className={`bg-white rounded-3xl p-5 sm:p-6 border-2 transition-all cursor-pointer hover:-translate-y-1 ${isUpdating ? 'opacity-50 pointer-events-none' : ''} ${isDone ? 'border-green-400 shadow-green-100 shadow-lg' : 'border-slate-100 shadow-sm hover:border-blue-200'}`}
                                     >
                                         <div className="flex justify-between items-start mb-4">
@@ -372,7 +372,7 @@
                     return;
                 }
 
-                if (!confirm(`Möchtest du Modul ${moduleId} für ${studentsToUpdate.length} Schüler ${action === 'grant' ? 'freischalten' : 'sperren'}?`)) return;
+                if (!confirm(`Möchtest du Modul ${moduleId} für ${studentsToUpdate.length} Schüler ${action === 'grant' ? 'freischalten' : 'zurücksetzen'}?`)) return;
 
                 setIsUpdating(true);
                 setDebugMsg(`Aktualisiere ${studentsToUpdate.length} Schüler... Bitte warten.`);
@@ -579,8 +579,8 @@
                                     <p className="text-xs font-medium text-slate-500">Wendet die Aktion auf alle {filteredStudents.length} angezeigten Schüler an.</p>
                                 </div>
                                 <div className="flex gap-2">
-                                    <button disabled={isUpdating} onClick={() => bulkToggle('revoke')} className="bg-white text-slate-700 hover:bg-slate-100 border px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all">Alle Sperren</button>
-                                    <button disabled={isUpdating} onClick={() => bulkToggle('grant')} className="text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-md" style={{ backgroundColor: THOMA_RED }}>Alle Freischalten</button>
+                                    <button disabled={isUpdating} onClick={() => bulkToggle('revoke')} className="bg-white text-slate-700 hover:bg-slate-100 border px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all">Alle zurücksetzen</button>
+                                    <button disabled={isUpdating} onClick={() => bulkToggle('grant')} className="text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-md" style={{ backgroundColor: THOMA_RED }}>Alle freischalten</button>
                                 </div>
                             </div>
                         )}
@@ -637,7 +637,7 @@
                                                                 disabled={isUpdating}
                                                                 onClick={() => toggleModuleSingle(student.id, parseInt(filterModul))}
                                                                 className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto transition-all ${isModulDone ? 'bg-green-500 text-white shadow-md shadow-green-200 hover:bg-red-500 hover:shadow-red-200' : 'bg-slate-100 text-slate-300 hover:bg-green-500 hover:text-white'}`}
-                                                                title={isModulDone ? "Klicken zum Entziehen" : "Klicken zum Freischalten"}
+                                                                title={isModulDone ? "Klicken zum Zurücksetzen" : "Klicken zum Freischalten"}
                                                             >
                                                                 <Icon name={isModulDone ? "check" : "circle"} size={16} />
                                                             </button>
