@@ -39,37 +39,31 @@
         };
         const msalInstance = new msal.PublicClientApplication(msalConfig);
 
-        // --- MODULE MIT WISSEN UND NEUEN AUFGABEN ---
+        // --- MODULE MIT WISSEN ---
         const ALL_MODULES = [
             { 
                 id: 1, category: "Skills", title: "Dateimanagement", icon: "folder", 
-                wissen: ["Dateien immer logisch benennen (z.B. '2026-03-Bio-Referat.docx').", "Ordnerstrukturen nach Fächern anlegen.", "Regelmäßig den Papierkorb leeren."],
-                aufgaben: ["Lege auf deinem Gerät einen Hauptordner 'Schule' und darin Unterordner für 3 Fächer an.", "Benenne ein altes, unübersichtliches Dokument sinnvoll um."]
+                wissen: ["Dateien immer logisch benennen (z.B. '2026-03-Bio-Referat.docx').", "Ordnerstrukturen nach Fächern anlegen.", "Regelmäßig den Papierkorb leeren."]
             },
             { 
                 id: 2, category: "Skills", title: "Textverarbeitung I", icon: "file-text", 
-                wissen: ["Nutze STRG+C (Kopieren) und STRG+V (Einfügen).", "Überschriften immer als 'Formatvorlage' markieren, nicht nur fett machen.", "Eine gut lesbare Schriftart (wie Arial oder Calibri) in Größe 11/12 nutzen."],
-                aufgaben: ["Öffne Word und tippe einen kurzen Text über dein Lieblingstier.", "Formatiere die Überschrift mit der Formatvorlage 'Überschrift 1'."]
+                wissen: ["Nutze STRG+C (Kopieren) und STRG+V (Einfügen).", "Überschriften immer als 'Formatvorlage' markieren, nicht nur fett machen.", "Eine gut lesbare Schriftart (wie Arial oder Calibri) in Größe 11/12 nutzen."]
             },
             { 
                 id: 3, category: "Reflexion", title: "Passwörter & Sicherheit", icon: "shield", 
-                wissen: ["Ein sicheres Passwort hat mindestens 12 Zeichen.", "Nutze niemals echte Namen von Haustieren oder dein Geburtsdatum.", "Verwende für verschiedene Seiten unterschiedliche Passwörter."],
-                aufgaben: ["Denke dir einen lustigen Merksatz aus (z.B. 'Ich esse jeden Morgen 2 Brötchen!') und bilde daraus ein sicheres Passwort (IejM2B!).", "Überprüfe, ob dein Schulpasswort lang genug ist."]
+                wissen: ["Ein sicheres Passwort hat mindestens 12 Zeichen.", "Nutze niemals echte Namen von Haustieren oder dein Geburtsdatum.", "Verwende für verschiedene Seiten unterschiedliche Passwörter."]
             },
             { 
                 id: 4, category: "Reflexion", title: "Netiquette", icon: "message-square", 
-                wissen: ["Im Chat gilt: Schreibe nichts, was du der Person nicht auch ins Gesicht sagen würdest.", "Ironie versteht man im Text oft falsch – nutze Emojis, um Missverständnisse zu vermeiden.", "Großbuchstaben (SCHREIEN) vermeiden."],
-                aufgaben: ["Lies deine letzten 3 Nachrichten im Klassenchat: Waren sie höflich und klar formuliert?", "Überlege dir, wie du reagierst, wenn jemand im Chat beleidigt wird."]
+                wissen: ["Im Chat gilt: Schreibe nichts, was du der Person nicht auch ins Gesicht sagen würdest.", "Ironie versteht man im Text oft falsch – nutze Emojis, um Missverständnisse zu vermeiden.", "Großbuchstaben (SCHREIEN) vermeiden."]
             },
             { 
                 id: 5, category: "Skills", title: "Suchmaschinen", icon: "search", 
-                wissen: ["Nutze Anführungszeichen für genaue Sätze (z.B. \"Klimawandel Folgen\").", "Glaube nicht gleich dem ersten Suchergebnis.", "Wikipedia ist ein guter Start, aber nicht die einzige Quelle."],
-                aufgaben: ["Suche im Internet nach dem Gründungsjahr unserer Schule.", "Finde zwei verschiedene Quellen, die das Datum bestätigen."]
+                wissen: ["Nutze Anführungszeichen für genaue Sätze (z.B. \"Klimawandel Folgen\").", "Glaube nicht gleich dem ersten Suchergebnis.", "Wikipedia ist ein guter Start, aber nicht die einzige Quelle."]
             },
             { 
                 id: 6, category: "Reflexion", title: "Urheberrecht", icon: "copyright", 
-                wissen: ["Du darfst nicht einfach Bilder aus der Google-Bildersuche für deine Präsentation nehmen.", "Nutze freie Bilddatenbanken wie Pixabay oder Unsplash.", "Gib bei Texten immer die Quelle (den Link) an."],
-                aufgaben: ["Suche auf 'Pixabay.com' ein kostenloses Bild von einem Hund.", "Schreibe die Quellenangabe für einen Wikipedia-Artikel richtig auf."]
+                wissen: ["Du darfst nicht einfach Bilder aus der Google-Bildersuche für deine Präsentation nehmen.", "Nutze freie Bilddatenbanken wie Pixabay oder Unsplash.", "Gib bei Texten immer die Quelle (den Link) an."]
             }
             // Hier können später weitere 12 Module ergänzt werden...
         ];
@@ -175,7 +169,7 @@
 
             return (
                 <div className="min-h-screen pb-12">
-                    {/* MODAL (WISSENSSPEICHER & AUFGABEN) */}
+                    {/* MODAL (WISSENSSPEICHER) */}
                     {activeModal && (
                         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
                             <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -214,25 +208,6 @@
                                             ))}
                                         </ul>
                                     </div>
-
-                                    {/* Sektion 2: NEU - Aufgaben / Missionen */}
-                                    {activeModal.aufgaben && activeModal.aufgaben.length > 0 && (
-                                        <div className="bg-amber-50 rounded-3xl p-6 border border-amber-200">
-                                            <h3 className="text-lg font-black text-amber-900 uppercase tracking-tight mb-4 flex items-center gap-2">
-                                                <Icon name="rocket" size={20} className="text-amber-600" /> 
-                                                Deine Missionen
-                                            </h3>
-                                            <p className="text-xs text-amber-700 font-bold mb-4 uppercase tracking-wider">Probier es aus:</p>
-                                            <ul className="space-y-3">
-                                                {activeModal.aufgaben.map((aufgabe, i) => (
-                                                    <li key={i} className="flex gap-3 bg-white p-4 rounded-2xl shadow-sm border border-amber-100">
-                                                        <Icon name="play" size={16} className="text-amber-500 shrink-0 mt-0.5" />
-                                                        <span className="text-amber-900 font-medium text-sm">{aufgabe}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
 
                                 </div>
                             </div>
