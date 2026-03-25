@@ -564,7 +564,7 @@
 
                     {/* Header - Mobile Optimiert */}
                     <header className="bg-[#BF0D3E] text-white pt-12 pb-6 px-6 sm:px-8 shadow-md rounded-b-[2rem] sm:rounded-b-[3rem] relative z-10">
-                        <div className="max-w-4xl mx-auto flex justify-between items-start">
+                        <div className="max-w-5xl mx-auto flex justify-between items-start">
                             <div className="mr-4">
                                 <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter mb-1">Hallo {studentData?.vorname}!</h1>
                                 <p className="text-red-200 font-bold text-sm sm:text-base opacity-90">Klasse {studentData?.klasse} • Gymnasium Thomaeum</p>
@@ -576,7 +576,7 @@
                         </div>
                         
                         {/* Fortschrittsbalken */}
-                        <div className="max-w-4xl mx-auto mt-8 bg-black/10 p-5 rounded-3xl backdrop-blur-sm">
+                        <div className="max-w-5xl mx-auto mt-8 bg-black/10 p-5 rounded-3xl backdrop-blur-sm">
                             <div className="flex justify-between items-end mb-3">
                                 <span className="font-black uppercase tracking-widest text-xs sm:text-sm text-white">Dein Fortschritt</span>
                                 <span className="font-black text-2xl sm:text-3xl text-white">{progressPercent}%</span>
@@ -592,7 +592,7 @@
                     </header>
 
                     {/* Content / Module */}
-                    <main className="flex-grow max-w-4xl mx-auto w-full px-4 sm:px-8 mt-[-1rem] sm:mt-[-2rem] relative z-20">
+                    <main className="flex-grow max-w-5xl mx-auto w-full px-4 sm:px-8 mt-[-1rem] sm:mt-[-2rem] relative z-20">
                         
                         {/* Navigation für die Jahrgangsstufen */}
                         <div className="flex gap-3 mb-2 overflow-x-auto pb-4 scrollbar-hide pt-4 sm:pt-6">
@@ -612,7 +612,7 @@
                             <h3 className="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
                                 <Icon name="wrench" size={24} className="text-[#BF0D3E]" /> Skills (Anwendung)
                             </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 {ALL_MODULES.filter(m => m.stage === activeStage && m.category === 'skills').map(modul => {
                                     const isDone = studentData?.completedTasks.includes(modul.id);
                                     const moduleData = studentData?.moduleDates[modul.id];
@@ -627,38 +627,38 @@
                                         <div 
                                             key={modul.id} 
                                             onClick={() => { if (isDone) setSelectedModule(modul); }}
-                                            className={`bg-white rounded-3xl p-5 sm:p-6 border-2 transition-all flex flex-col h-full ${isDone ? 'border-green-400 shadow-green-100 shadow-lg cursor-pointer hover:-translate-y-1 hover:shadow-xl' : 'border-slate-100 shadow-sm opacity-90'}`}
+                                            className={`bg-white rounded-2xl p-4 sm:p-5 border-2 transition-all flex flex-col h-full ${isDone ? 'border-green-400 shadow-green-100 shadow-lg cursor-pointer hover:-translate-y-1 hover:shadow-xl' : 'border-slate-100 shadow-sm opacity-90'}`}
                                         >
                                             <div className="flex justify-between items-start mb-4">
                                                 <span className="text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 px-3 py-1 rounded-lg">Klasse {modul.stage}</span>
                                                 {isDone ? (
-                                                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white shadow-md">
+                                                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white shadow-md shrink-0 ml-2">
                                                         <Icon name="check" size={16} />
                                                     </div>
                                                 ) : (
-                                                    <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-300">
+                                                    <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 shrink-0 ml-2">
                                                         <Icon name="lock" size={14} />
                                                     </div>
                                                 )}
                                             </div>
                                             
-                                            <h3 className={`font-black text-lg sm:text-xl tracking-tight leading-tight mb-2 ${isDone ? 'text-slate-800' : 'text-slate-500'}`}>
+                                            <h3 className={`font-black text-base lg:text-lg tracking-tight leading-tight mb-2 ${isDone ? 'text-slate-800' : 'text-slate-500'}`}>
                                                 {modul.title}
                                             </h3>
                                             
                                             <div className="mt-auto">
                                                 {isDone ? (
                                                     <div>
-                                                        <div className="text-xs font-bold text-green-600 flex flex-col gap-0.5 mt-3 mb-4">
+                                                        <div className="text-[10px] font-bold text-green-600 flex flex-col gap-0.5 mt-3 mb-4">
                                                             <span className="flex items-center gap-1">
                                                                 <Icon name="calendar-check" size={12} />
                                                                 Zertifiziert am {dateDone}
                                                             </span>
-                                                            {teacherName && <span className="text-[10px] text-green-700 ml-4">durch {teacherName}</span>}
+                                                            {teacherName && <span className="text-[9px] text-green-700 ml-4">durch {teacherName}</span>}
                                                         </div>
                                                         <div className="pt-3 border-t border-slate-100 text-center">
-                                                            <span className="text-[10px] font-black uppercase tracking-widest text-[#BF0D3E] flex items-center justify-center gap-2 group-hover:text-red-700">
-                                                                <Icon name="book-open" size={14} /> Wissensspeicher öffnen
+                                                            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[#BF0D3E] flex items-center justify-center gap-2 group-hover:text-red-700">
+                                                                <Icon name="book-open" size={14} /> Wissensspeicher
                                                             </span>
                                                         </div>
                                                     </div>
@@ -678,7 +678,7 @@
                             <h3 className="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
                                 <Icon name="brain" size={24} className="text-[#BF0D3E]" /> Reflexion (Umgang)
                             </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 {ALL_MODULES.filter(m => m.stage === activeStage && m.category === 'reflexion').map(modul => {
                                     const isDone = studentData?.completedTasks.includes(modul.id);
                                     const moduleData = studentData?.moduleDates[modul.id];
@@ -693,38 +693,38 @@
                                         <div 
                                             key={modul.id} 
                                             onClick={() => { if (isDone) setSelectedModule(modul); }}
-                                            className={`bg-white rounded-3xl p-5 sm:p-6 border-2 transition-all flex flex-col h-full ${isDone ? 'border-green-400 shadow-green-100 shadow-lg cursor-pointer hover:-translate-y-1 hover:shadow-xl' : 'border-slate-100 shadow-sm opacity-90'}`}
+                                            className={`bg-white rounded-2xl p-4 sm:p-5 border-2 transition-all flex flex-col h-full ${isDone ? 'border-green-400 shadow-green-100 shadow-lg cursor-pointer hover:-translate-y-1 hover:shadow-xl' : 'border-slate-100 shadow-sm opacity-90'}`}
                                         >
                                             <div className="flex justify-between items-start mb-4">
                                                 <span className="text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 px-3 py-1 rounded-lg">Klasse {modul.stage}</span>
                                                 {isDone ? (
-                                                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white shadow-md">
+                                                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white shadow-md shrink-0 ml-2">
                                                         <Icon name="check" size={16} />
                                                     </div>
                                                 ) : (
-                                                    <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-300">
+                                                    <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 shrink-0 ml-2">
                                                         <Icon name="lock" size={14} />
                                                     </div>
                                                 )}
                                             </div>
                                             
-                                            <h3 className={`font-black text-lg sm:text-xl tracking-tight leading-tight mb-2 ${isDone ? 'text-slate-800' : 'text-slate-500'}`}>
+                                            <h3 className={`font-black text-base lg:text-lg tracking-tight leading-tight mb-2 ${isDone ? 'text-slate-800' : 'text-slate-500'}`}>
                                                 {modul.title}
                                             </h3>
                                             
                                             <div className="mt-auto">
                                                 {isDone ? (
                                                     <div>
-                                                        <div className="text-xs font-bold text-green-600 flex flex-col gap-0.5 mt-3 mb-4">
+                                                        <div className="text-[10px] font-bold text-green-600 flex flex-col gap-0.5 mt-3 mb-4">
                                                             <span className="flex items-center gap-1">
                                                                 <Icon name="calendar-check" size={12} />
                                                                 Zertifiziert am {dateDone}
                                                             </span>
-                                                            {teacherName && <span className="text-[10px] text-green-700 ml-4">durch {teacherName}</span>}
+                                                            {teacherName && <span className="text-[9px] text-green-700 ml-4">durch {teacherName}</span>}
                                                         </div>
                                                         <div className="pt-3 border-t border-slate-100 text-center">
-                                                            <span className="text-[10px] font-black uppercase tracking-widest text-[#BF0D3E] flex items-center justify-center gap-2 group-hover:text-red-700">
-                                                                <Icon name="book-open" size={14} /> Wissensspeicher öffnen
+                                                            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[#BF0D3E] flex items-center justify-center gap-2 group-hover:text-red-700">
+                                                                <Icon name="book-open" size={14} /> Wissensspeicher
                                                             </span>
                                                         </div>
                                                     </div>
