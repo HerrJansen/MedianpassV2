@@ -2,664 +2,346 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mein Medienpass | Gymnasium Thomaeum</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digitaler Medienpass | Gymnasium Thomaeum</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script type="text/javascript" src="https://alcdn.msauth.net/browser/2.32.2/js/msal-browser.min.js"></script>
-
+    <script src="https://alcdn.msauth.net/browser/2.30.0/js/msal-browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
-        :root { --thomaeum-red: #BF0D3E; }
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
-        .spinner { border: 3px solid rgba(0,0,0,0.1); border-left-color: var(--thomaeum-red); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .spinner { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 3px solid #fff; width: 24px; height: 24px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        /* Thomaeum Colors */
+        .bg-thoma-red { background-color: #BF0D3E; }
+        .text-thoma-red { color: #BF0D3E; }
+        .border-thoma-red { border-color: #BF0D3E; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
-
-        // --- KONFIGURATION ---
+        // --- KONFIGURATION (Bitte DEINE echten IDs hier eintragen, falls sie abweichen) ---
         const MS_CONFIG = {
+            clientId: "7d277b19-93c1-4df7-8f1b-d38749b3d440", 
             tenantId: "09c4bd58-1b8c-410d-930e-816015e61028",
-            clientId: "7d277b19-93c1-4df7-8f1b-d38749b3d440",
             siteId: "thomaeumde.sharepoint.com,9ef17c4d-b57b-482e-9168-3cc3bc43bc3d,d600d53b-cfd0-45f7-96a5-f1ac20222f8f",
             listId: "08da02d9-5b67-4938-9d7e-9e9dee97fa2e"
         };
-        const THOMA_RED = "#BF0D3E";
 
         const msalConfig = {
-            auth: {
-                clientId: MS_CONFIG.clientId,
-                authority: `https://login.microsoftonline.com/${MS_CONFIG.tenantId}`,
-                redirectUri: window.location.origin,
-                navigateToLoginRequestUrl: true // WICHTIG FÜR HANDYS
-            },
-            cache: { cacheLocation: "localStorage", storeAuthStateInCookie: true }
+            auth: { clientId: MS_CONFIG.clientId, authority: `https://login.microsoftonline.com/${MS_CONFIG.tenantId}` },
+            cache: { cacheLocation: "sessionStorage", storeAuthStateInCookie: false }
         };
-        
         const msalInstance = new msal.PublicClientApplication(msalConfig);
-        const msalInitPromise = msalInstance.initialize();
 
+        // --- MODULE MIT WISSEN UND NEUEN AUFGABEN ---
         const ALL_MODULES = [
-            { id: 1, title: "Hardware-Führerschein", stage: "5-6", category: "skills" }, { id: 2, title: "Dateimanagement", stage: "5-6", category: "skills" }, { id: 3, title: "Umgang mit Word", stage: "5-6", category: "skills" },
-            { id: 4, title: "Netiquette", stage: "5-6", category: "reflexion" }, { id: 5, title: "Prävention", stage: "5-6", category: "reflexion" }, { id: 6, title: "Suchmaschinen", stage: "5-6", category: "reflexion" },
-            { id: 7, title: "Präsentationsprofi", stage: "7-8", category: "skills" }, { id: 8, title: "Medienproduktion", stage: "7-8", category: "skills" }, { id: 9, title: "Tabellenkalkulation", stage: "7-8", category: "skills" },
-            { id: 10, title: "Urheberrecht", stage: "7-8", category: "reflexion" }, { id: 11, title: "Quellenkritik", stage: "7-8", category: "reflexion" }, { id: 12, title: "Datenschutz", stage: "7-8", category: "reflexion" },
-            { id: 13, title: "KI-Produktivität", stage: "9-10", category: "skills" }, { id: 14, title: "Digitale Bewerbung", stage: "9-10", category: "skills" }, { id: 15, title: "Projektmanagement", stage: "9-10", category: "skills" },
-            { id: 16, title: "KI-Ethik", stage: "9-10", category: "reflexion" }, { id: 17, title: "Zivilcourage", stage: "9-10", category: "reflexion" }, { id: 18, title: "Digitaler Fußabdruck", stage: "9-10", category: "reflexion" }
+            { 
+                id: 1, category: "Skills", title: "Dateimanagement", icon: "folder", 
+                wissen: ["Dateien immer logisch benennen (z.B. '2026-03-Bio-Referat.docx').", "Ordnerstrukturen nach Fächern anlegen.", "Regelmäßig den Papierkorb leeren."],
+                aufgaben: ["Lege auf deinem Gerät einen Hauptordner 'Schule' und darin Unterordner für 3 Fächer an.", "Benenne ein altes, unübersichtliches Dokument sinnvoll um."]
+            },
+            { 
+                id: 2, category: "Skills", title: "Textverarbeitung I", icon: "file-text", 
+                wissen: ["Nutze STRG+C (Kopieren) und STRG+V (Einfügen).", "Überschriften immer als 'Formatvorlage' markieren, nicht nur fett machen.", "Eine gut lesbare Schriftart (wie Arial oder Calibri) in Größe 11/12 nutzen."],
+                aufgaben: ["Öffne Word und tippe einen kurzen Text über dein Lieblingstier.", "Formatiere die Überschrift mit der Formatvorlage 'Überschrift 1'."]
+            },
+            { 
+                id: 3, category: "Reflexion", title: "Passwörter & Sicherheit", icon: "shield", 
+                wissen: ["Ein sicheres Passwort hat mindestens 12 Zeichen.", "Nutze niemals echte Namen von Haustieren oder dein Geburtsdatum.", "Verwende für verschiedene Seiten unterschiedliche Passwörter."],
+                aufgaben: ["Denke dir einen lustigen Merksatz aus (z.B. 'Ich esse jeden Morgen 2 Brötchen!') und bilde daraus ein sicheres Passwort (IejM2B!).", "Überprüfe, ob dein Schulpasswort lang genug ist."]
+            },
+            { 
+                id: 4, category: "Reflexion", title: "Netiquette", icon: "message-square", 
+                wissen: ["Im Chat gilt: Schreibe nichts, was du der Person nicht auch ins Gesicht sagen würdest.", "Ironie versteht man im Text oft falsch – nutze Emojis, um Missverständnisse zu vermeiden.", "Großbuchstaben (SCHREIEN) vermeiden."],
+                aufgaben: ["Lies deine letzten 3 Nachrichten im Klassenchat: Waren sie höflich und klar formuliert?", "Überlege dir, wie du reagierst, wenn jemand im Chat beleidigt wird."]
+            },
+            { 
+                id: 5, category: "Skills", title: "Suchmaschinen", icon: "search", 
+                wissen: ["Nutze Anführungszeichen für genaue Sätze (z.B. \"Klimawandel Folgen\").", "Glaube nicht gleich dem ersten Suchergebnis.", "Wikipedia ist ein guter Start, aber nicht die einzige Quelle."],
+                aufgaben: ["Suche im Internet nach dem Gründungsjahr unserer Schule.", "Finde zwei verschiedene Quellen, die das Datum bestätigen."]
+            },
+            { 
+                id: 6, category: "Reflexion", title: "Urheberrecht", icon: "copyright", 
+                wissen: ["Du darfst nicht einfach Bilder aus der Google-Bildersuche für deine Präsentation nehmen.", "Nutze freie Bilddatenbanken wie Pixabay oder Unsplash.", "Gib bei Texten immer die Quelle (den Link) an."],
+                aufgaben: ["Suche auf 'Pixabay.com' ein kostenloses Bild von einem Hund.", "Schreibe die Quellenangabe für einen Wikipedia-Artikel richtig auf."]
+            }
+            // Hier können später weitere 12 Module ergänzt werden...
         ];
 
-        const Icon = ({ name, size = 20, className = "" }) => {
-            const [svg, setSvg] = useState("");
-            useEffect(() => {
-                if (window.lucide && window.lucide.icons[name]) {
-                    setSvg(window.lucide.icons[name].toSvg({ width: size, height: size, class: className }));
+        // --- HILFS-KOMPONENTE FÜR ICONS ---
+        const Icon = ({ name, size = 24, className = "" }) => {
+            const iconRef = React.useRef(null);
+            React.useEffect(() => {
+                if (iconRef.current && window.lucide) {
+                    window.lucide.createIcons({ icons: { [name]: window.lucide.icons[name] }, nameAttr: 'data-lucide', attrs: { class: className, width: size, height: size } });
                 }
             }, [name, size, className]);
-            return <span className={`inline-flex items-center justify-center ${className}`} dangerouslySetInnerHTML={{ __html: svg }} />;
+            return <i ref={iconRef} data-lucide={name}></i>;
         };
 
-        // --- DER WISSENSSPEICHER (Inhalte für die Popups) ---
-        const getModuleContent = (moduleId) => {
-            if (moduleId === 4) {
-                return (
-                    <div className="space-y-8 text-slate-700 leading-relaxed">
-                        <div className="bg-green-50 p-5 rounded-3xl border border-green-100">
-                            <h4 className="font-black text-green-800 text-lg flex items-center gap-2 mb-2"><Icon name="trophy" size={24} className="text-green-600"/> Netiquette-Profi!</h4>
-                            <p className="text-sm font-medium text-green-700">Herzlichen Glückwunsch! Du weißt jetzt, wie man sich im Internet und in Klassen-Chats fair und respektvoll verhält. Hier sind die wichtigsten Regeln:</p>
-                        </div>
-
-                        <div>
-                            <h4 className="font-black text-xl text-slate-800 mb-3 flex items-center gap-2"><Icon name="heart" size={24} className="text-[#BF0D3E]"/> 1. Der Mensch am anderen Ende</h4>
-                            <p className="text-sm mb-3 font-medium">Vergiss nie: Hinter jedem Profilbild und Chatnamen steckt ein echter Mensch mit echten Gefühlen!</p>
-                            <ul className="list-none text-sm space-y-3">
-                                <li className="flex gap-3 items-start">
-                                    <div className="mt-1 w-2 h-2 rounded-full bg-[#BF0D3E] shrink-0"></div>
-                                    <p><strong>Die goldene Regel:</strong> Schreibe im Internet nur das, was du der Person auch mutig direkt ins Gesicht sagen würdest.</p>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h4 className="font-black text-xl text-slate-800 mb-3 flex items-center gap-2"><Icon name="volume-2" size={24} className="text-[#BF0D3E]"/> 2. BITTE NICHT SCHREIEN!</h4>
-                            <p className="text-sm mb-3 font-medium">Wusstest du, dass Großbuchstaben im Internet eine besondere Bedeutung haben?</p>
-                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm">
-                                <p>Wenn du <code className="bg-slate-200 text-slate-800 px-2 py-1 rounded font-bold">ALLES GROSS SCHREIBST</code>, bedeutet das in der Chat-Sprache, dass du brüllst. Nutze das also nur, wenn du wirklich Begeisterung oder Lautstärke ausdrücken willst!</p>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h4 className="font-black text-xl text-slate-800 mb-3 flex items-center gap-2"><Icon name="smile" size={24} className="text-[#BF0D3E]"/> 3. Achtung bei Witzen und Ironie</h4>
-                            <p className="text-sm mb-3 font-medium">Im Chat kann man dein Lachen nicht hören und dein Gesicht nicht sehen. Witze werden deshalb oft falsch verstanden und wirken auf andere plötzlich fies oder gemein.</p>
-                            <ul className="list-none text-sm space-y-3">
-                                <li className="flex gap-3 items-start">
-                                    <div className="mt-1 w-2 h-2 rounded-full bg-[#BF0D3E] shrink-0"></div>
-                                    <p><strong>Die Lösung:</strong> Nutze passende Emojis (😂, 😜, 🙈), um zu zeigen, wie ein Satz gemeint ist. Aber übertreibe es nicht – ein bis zwei Emojis reichen völlig!</p>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h4 className="font-black text-xl text-slate-800 mb-3 flex items-center gap-2"><Icon name="camera" size={24} className="text-[#BF0D3E]"/> 4. Keine ungefragten Fotos!</h4>
-                            <p className="text-sm mb-3 font-medium">Jeder Mensch hat das "Recht am eigenen Bild". Das ist in Deutschland sogar ein Gesetz!</p>
-                            <ul className="list-none text-sm space-y-3">
-                                <li className="flex gap-3 items-start">
-                                    <div className="mt-1 w-2 h-2 rounded-full bg-[#BF0D3E] shrink-0"></div>
-                                    <p>Du darfst Bilder, auf denen andere Personen zu erkennen sind (auch witzige Schnappschüsse auf dem Schulhof), <strong>niemals ohne ihre Erlaubnis</strong> in eine Gruppe posten oder weiterverschicken.</p>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div className="bg-red-50 p-5 rounded-3xl border border-red-100">
-                            <h4 className="font-black text-lg text-slate-800 mb-2 flex items-center gap-2"><Icon name="eye" size={20} className="text-[#BF0D3E]"/> 5. Erst denken, dann posten</h4>
-                            <p className="text-sm mb-3">Das Internet vergisst nicht. Bevor du wütend eine Nachricht abschickst, lege das Handy weg und atme tief durch.</p>
-                            <ul className="list-none text-sm space-y-3">
-                                <li className="flex gap-3 items-start">
-                                    <div className="mt-1 w-2 h-2 rounded-full bg-[#BF0D3E] shrink-0"></div>
-                                    <p>Auch wenn du eine Nachricht bei WhatsApp "für alle löschst": Jemand könnte in der Zwischenzeit schon einen Screenshot (Bildschirmfoto) davon gemacht haben. Es gibt im Internet oft kein echtes Zurück!</p>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                );
-            }
-            if (moduleId === 6) {
-                return (
-                    <div className="space-y-8 text-slate-700 leading-relaxed">
-                        <div className="bg-green-50 p-5 rounded-3xl border border-green-100">
-                            <h4 className="font-black text-green-800 text-lg flex items-center gap-2 mb-2"><Icon name="trophy" size={24} className="text-green-600"/> Suchmaschinen-Profi!</h4>
-                            <p className="text-sm font-medium text-green-700">Du hast dieses Modul erfolgreich freigeschaltet. Hier findest du noch einmal deine wichtigsten Superkräfte für die perfekte Suche im Internet zusammengefasst. Werde zum Meisterdetektiv im Netz!</p>
-                        </div>
-
-                        <div>
-                            <h4 className="font-black text-xl text-slate-800 mb-3 flex items-center gap-2"><Icon name="bot" size={24} className="text-[#BF0D3E]"/> 1. Das Geheimnis der Suchmaschine</h4>
-                            <p className="text-sm mb-3 font-medium">Stell dir das Internet wie eine gigantische, chaotische Bibliothek ohne Regale vor. Eine Suchmaschine sucht nicht "live" im ganzen Internet, wenn du auf Enter drückst – das würde Tage dauern!</p>
-                            <ul className="list-none text-sm space-y-3">
-                                <li className="flex gap-3 items-start">
-                                    <div className="mt-1 w-2 h-2 rounded-full bg-[#BF0D3E] shrink-0"></div>
-                                    <p><strong>Die Spinnen (Crawler/Spider):</strong> Kleine, unsichtbare Programme der Suchmaschinen kr krabbeln Tag und Nacht durchs Internet. Sie lesen Webseiten, folgen Links und sammeln alle Wörter, die sie finden.</p>
-                                </li>
-                                <li className="flex gap-3 items-start">
-                                    <div className="mt-1 w-2 h-2 rounded-full bg-[#BF0D3E] shrink-0"></div>
-                                    <p><strong>Der Index (Das Inhaltsverzeichnis):</strong> Die Crawler packen alle gefundenen Wörter in ein riesiges Inhaltsverzeichnis, den sogenannten "Index". Wenn du etwas suchst, durchsucht die Suchmaschine eigentlich nur diesen Index, nicht das Live-Internet. Deshalb geht das so blitzschnell!</p>
-                                </li>
-                                <li className="flex gap-3 items-start">
-                                    <div className="mt-1 w-2 h-2 rounded-full bg-[#BF0D3E] shrink-0"></div>
-                                    <p><strong>Der Algorithmus (Der Bibliothekar):</strong> Ein geheimes Rechenprogramm entscheidet dann, welche der Millionen gefundenen Seiten am besten zu deiner Suchanfrage passt und zeigt dir diese ganz oben an.</p>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h4 className="font-black text-xl text-slate-800 mb-3 flex items-center gap-2"><Icon name="target" size={24} className="text-[#BF0D3E]"/> 2. Die perfekten Suchbegriffe (Keywords)</h4>
-                            <p className="text-sm mb-4 font-medium">Tippe niemals ganze Sätze oder Fragen in die Suchleiste ein! Suchmaschinen verstehen keine menschliche Sprache wie "bitte" oder "wie viel", sie verstehen <strong>Schlagwörter (Keywords)</strong> viel besser.</p>
-                            <div className="space-y-3 bg-slate-50 p-5 rounded-2xl border border-slate-100">
-                                <div className="flex gap-3 items-center text-sm">
-                                    <span className="text-red-500 font-black text-lg">❌</span> 
-                                    <p><span className="text-slate-500 italic">Falsch:</span> "Was fressen Eisbären eigentlich im kalten Winter, wenn sie Hunger haben?"</p>
-                                </div>
-                                <div className="flex gap-3 items-center text-sm">
-                                    <span className="text-green-500 font-black text-lg">✅</span> 
-                                    <p><span className="text-slate-500 italic">Richtig:</span> <code className="bg-green-100 text-green-800 px-2 py-1 rounded-md font-bold">Eisbär Nahrung Winter</code></p>
-                                </div>
-                                <div className="flex gap-3 items-center text-sm pt-2 border-t border-slate-200 mt-2">
-                                    <span className="text-yellow-500 font-black text-lg">💡</span> 
-                                    <p><strong>Der Synonym-Trick:</strong> Wenn du mit einem Wort nichts Passendes findest, nutze <strong>Synonyme</strong> (Wörter mit gleicher Bedeutung)! Finde z. B. statt "Auto" mal "KFZ", "Fahrzeug" oder "PKW".</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h4 className="font-black text-xl text-slate-800 mb-3 flex items-center gap-2"><Icon name="wand-2" size={24} className="text-[#BF0D3E]"/> 3. Die Profi-Tricks (Suchoperatoren)</h4>
-                            <p className="text-sm mb-3 font-medium">Mit diesen kleinen unscheinbaren Zeichen zeigst du der Suchmaschine, wer der wahre Boss ist und grenzt deine Suche clever ein:</p>
-                            <div className="grid gap-4 sm:grid-cols-2">
-                                <div className="bg-white border-2 border-slate-100 p-4 rounded-2xl shadow-sm">
-                                    <p className="font-black text-lg mb-1">Das Minus (-)</p>
-                                    <p className="text-xs text-slate-500 mb-2">Schließt unerwünschte Wörter aus. Du suchst das Tier Jaguar, willst aber keine Autos sehen?</p>
-                                    <code className="bg-slate-100 text-[#BF0D3E] px-2 py-1 rounded font-bold text-sm">Jaguar -Auto</code>
-                                </div>
-                                <div className="bg-white border-2 border-slate-100 p-4 rounded-2xl shadow-sm">
-                                    <p className="font-black text-lg mb-1">Die Gänsefüßchen (" ")</p>
-                                    <p className="text-xs text-slate-500 mb-2">Sucht exakt nach dieser Wortfolge. Gut für Zitate oder Namen.</p>
-                                    <code className="bg-slate-100 text-[#BF0D3E] px-2 py-1 rounded font-bold text-sm">"Gymnasium Thomaeum"</code>
-                                </div>
-                                <div className="bg-white border-2 border-slate-100 p-4 rounded-2xl shadow-sm">
-                                    <p className="font-black text-lg mb-1">Dateityp (filetype:)</p>
-                                    <p className="text-xs text-slate-500 mb-2">Sucht gezielt nach bestimmten Dateien, wie z.B. Präsentationen oder PDFs.</p>
-                                    <code className="bg-slate-100 text-[#BF0D3E] px-2 py-1 rounded font-bold text-sm">Römer filetype:pdf</code>
-                                </div>
-                                <div className="bg-white border-2 border-slate-100 p-4 rounded-2xl shadow-sm">
-                                    <p className="font-black text-lg mb-1">Wildcard (*)</p>
-                                    <p className="text-xs text-slate-500 mb-2">Ersetzt ein fehlendes Wort in einem Satz. Praktisch, wenn man sich nicht genau erinnert.</p>
-                                    <code className="bg-slate-100 text-[#BF0D3E] px-2 py-1 rounded font-bold text-sm">"Ich bin ein * holt mich hier raus"</code>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h4 className="font-black text-xl text-slate-800 mb-3 flex items-center gap-2"><Icon name="search" size={24} className="text-[#BF0D3E]"/> 4. Augen auf bei der Trefferliste!</h4>
-                            <p className="text-sm mb-3 font-medium">Nicht jedes Suchergebnis ist ein Volltreffer. Lerne, die Ergebnisseite richtig zu lesen:</p>
-                            <ul className="list-none text-sm space-y-3">
-                                <li className="flex gap-3 items-start">
-                                    <div className="mt-1 w-2 h-2 rounded-full bg-[#BF0D3E] shrink-0"></div>
-                                    <p><strong>Anzeigen erkennen:</strong> Der erste Treffer ist nicht immer der beste! Firmen bezahlen Geld an Suchmaschinen, um ganz oben zu stehen. Diese gekauften Treffer haben ein kleines, unscheinbares Wort wie <strong>"Anzeige"</strong> oder <strong>"Gesponsert"</strong> neben sich. Klicke lieber auf die echten ("organischen") Ergebnisse weiter unten.</p>
-                                </li>
-                                <li className="flex gap-3 items-start">
-                                    <div className="mt-1 w-2 h-2 rounded-full bg-[#BF0D3E] shrink-0"></div>
-                                    <p><strong>Snippets scannen:</strong> Das "Snippet" ist der kurze graue Textausschnitt unter dem blauen Link. Lies dir dieses Snippet immer erst durch! Oft erkennst du schon hier, ob die Seite deine Frage beantwortet, und sparst dir unnötiges Herumklicken.</p>
-                                </li>
-                                <li className="flex gap-3 items-start">
-                                    <div className="mt-1 w-2 h-2 rounded-full bg-[#BF0D3E] shrink-0"></div>
-                                    <p><strong>URL prüfen:</strong> Schau dir die grüne oder schwarze Internetadresse (URL) unter dem Titel an. Sieht die Adresse seriös aus? Handelt es sich um eine bekannte Zeitung, ein Lexikon oder eine seltsame, unbekannte Seite?</p>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div className="bg-red-50 p-5 rounded-3xl border border-red-100">
-                            <h4 className="font-black text-lg text-slate-800 mb-2 flex items-center gap-2"><Icon name="shield-check" size={20} className="text-[#BF0D3E]"/> 5. Sichere Alternativen zu Google</h4>
-                            <p className="text-sm mb-3">Google ist ein Riese, aber nicht immer die beste Wahl für Kinder und Jugendliche. Es gibt Suchmaschinen, die das Internet speziell für dich filtern und dir nur sichere, leicht verständliche und werbefreie Seiten zeigen:</p>
-                            <div className="flex flex-wrap gap-2 mb-4">
-                                <a href="https://www.fragfinn.de/" target="_blank" className="bg-white hover:bg-slate-50 transition-colors px-3 py-1 rounded-full text-xs font-bold text-slate-700 shadow-sm border border-slate-200 cursor-pointer">FragFINN.de</a>
-                                <a href="https://www.blinde-kuh.de/" target="_blank" className="bg-white hover:bg-slate-50 transition-colors px-3 py-1 rounded-full text-xs font-bold text-slate-700 shadow-sm border border-slate-200 cursor-pointer">Blinde-Kuh.de</a>
-                                <a href="https://www.helles-koepfchen.de/" target="_blank" className="bg-white hover:bg-slate-50 transition-colors px-3 py-1 rounded-full text-xs font-bold text-slate-700 shadow-sm border border-slate-200 cursor-pointer">Helles-Koepfchen.de</a>
-                            </div>
-                            <p className="text-[11px] font-medium text-slate-600 mt-2 mb-2">Diese Suchmaschinen nutzen oft eine "Whitelist". Das bedeutet, sie zeigen nur Seiten an, die vorher von Pädagogen überprüft und für gut befunden wurden.</p>
-                            <p className="text-[11px] font-medium text-slate-500 italic border-t border-red-200 pt-3 mt-2">
-                                <strong>Datenschutz-Tipp für später:</strong> Fast jede Suche bei Google wird gespeichert. Wenn du mal privat suchen willst, ohne dass die Suchmaschine ein Profil von dir erstellt, probiere datensparsame Suchmaschinen wie <strong>DuckDuckGo.com</strong> oder <strong>Startpage.com</strong> aus!
-                            </p>
-                        </div>
-                    </div>
-                );
-            }
-            if (moduleId === 3) {
-                return (
-                    <div className="space-y-8 text-slate-700 leading-relaxed">
-                        <div className="bg-green-50 p-5 rounded-3xl border border-green-100">
-                            <h4 className="font-black text-green-800 text-lg flex items-center gap-2 mb-2"><Icon name="trophy" size={24} className="text-green-600"/> Text-Profi in Word!</h4>
-                            <p className="text-sm font-medium text-green-700">Herzlichen Glückwunsch! Du weißt jetzt, wie man in Microsoft Word Texte tippt. Hier sind die geheimen Profi-Tricks für perfekte Referate:</p>
-                        </div>
-
-                        <div>
-                            <h4 className="font-black text-xl text-slate-800 mb-3 flex items-center gap-2"><Icon name="undo-2" size={24} className="text-[#BF0D3E]"/> 1. Der magische Lebensretter</h4>
-                            <p className="text-sm mb-3 font-medium">Oh nein! Du hast aus Versehen deinen halben Text gelöscht? Keine Panik!</p>
-                            <ul className="list-none text-sm space-y-3">
-                                <li className="flex gap-3 items-start">
-                                    <div className="mt-1 w-2 h-2 rounded-full bg-[#BF0D3E] shrink-0"></div>
-                                    <p>Klicke ganz oben links in Word auf den <strong>gebogenen Pfeil nach links</strong>.</p>
-                                </li>
-                                <li className="flex gap-3 items-start">
-                                    <div className="mt-1 w-2 h-2 rounded-full bg-[#BF0D3E] shrink-0"></div>
-                                    <p><strong>Der Profi-Trick:</strong> Drücke auf deiner Tastatur gleichzeitig <code className="bg-slate-100 text-[#BF0D3E] px-2 py-1 rounded font-bold">Strg</code> und <code className="bg-slate-100 text-[#BF0D3E] px-2 py-1 rounded font-bold">Z</code>. Schwupps! Word macht deinen Fehler sofort rückgängig.</p>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h4 className="font-black text-xl text-slate-800 mb-3 flex items-center gap-2"><Icon name="list" size={24} className="text-[#BF0D3E]"/> 2. Ordnung schaffen mit Listen</h4>
-                            <p className="text-sm mb-3 font-medium">Wenn du viele Informationen hast, benutze Listen! Das liest sich viel besser als ein riesiger Textblock.</p>
-                            <ul className="list-none text-sm space-y-3">
-                                <li className="flex gap-3 items-start">
-                                    <div className="mt-1 w-2 h-2 rounded-full bg-[#BF0D3E] shrink-0"></div>
-                                    <p>Markiere deinen Text und klicke oben im Menü "Start" auf die <strong>Aufzählungszeichen</strong> (Punkte) oder auf die <strong>Nummerierung</strong> (1. 2. 3.).</p>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h4 className="font-black text-xl text-slate-800 mb-3 flex items-center gap-2"><Icon name="image" size={24} className="text-[#BF0D3E]"/> 3. Bilder einfügen (ohne Chaos!)</h4>
-                            <p className="text-sm mb-3 font-medium">Oft zerreißt ein Bild deinen ganzen Text und lässt sich nicht verschieben.</p>
-                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm">
-                                <p><strong>Die Lösung:</strong> Klicke das Bild an. Daneben erscheint ein kleines Symbol mit Linien ("Layoutoptionen"). Klicke darauf und wähle <strong>"Quadrat"</strong>. Jetzt fließt dein Text wunderschön um das Bild herum!</p>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h4 className="font-black text-xl text-slate-800 mb-3 flex items-center gap-2"><Icon name="file-warning" size={24} className="text-[#BF0D3E]"/> 4. Der rote Wellen-Alarm</h4>
-                            <p className="text-sm mb-3 font-medium">Wenn unter einem Wort eine rote Wellenlinie auftaucht, hat Word einen Rechtschreibfehler entdeckt.</p>
-                            <ul className="list-none text-sm space-y-3">
-                                <li className="flex gap-3 items-start">
-                                    <div className="mt-1 w-2 h-2 rounded-full bg-[#BF0D3E] shrink-0"></div>
-                                    <p><strong>So korrigierst du es:</strong> Klicke mit der <strong>rechten Maustaste</strong> auf das Wort. Wähle das richtige Wort aus dem Menü.</p>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div className="bg-red-50 p-5 rounded-3xl border border-red-100">
-                            <h4 className="font-black text-lg text-slate-800 mb-2 flex items-center gap-2"><Icon name="file-text" size={20} className="text-[#BF0D3E]"/> 5. Das PDF-Geheimnis</h4>
-                            <p className="text-sm mb-3">Damit sich deine Hausaufgaben beim Lehrer auf dem PC nicht verschieben, speichere sie immer als PDF!</p>
-                            <ul className="list-none text-sm space-y-3">
-                                <li className="flex gap-3 items-start">
-                                    <div className="mt-1 w-2 h-2 rounded-full bg-[#BF0D3E] shrink-0"></div>
-                                    <p>Klicke auf <strong>Datei -> Speichern unter</strong> und wähle bei "Dateityp" in der Liste <strong>PDF</strong> aus.</p>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                );
-            }
-            // Fallback für alle anderen Module, die noch keinen Text haben
-            return (
-                <div className="text-center py-12 px-4">
-                    <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                        <Icon name="book-open" size={40} />
-                    </div>
-                    <h3 className="text-xl font-black text-slate-800 mb-2">Inhalte in Arbeit</h3>
-                    <p className="text-slate-500 text-sm max-w-sm mx-auto">Der Wissensspeicher für dieses Modul wird gerade von deinen Lehrkräften geschrieben. Schau bald wieder vorbei!</p>
-                </div>
-            );
-        }
-
+        // --- HAUPT-APP ---
         const App = () => {
-            const [user, setUser] = useState(null);
-            const [studentData, setStudentData] = useState(null);
-            const [loading, setLoading] = useState(true);
-            const [authRequired, setAuthRequired] = useState(false);
-            const [errorMsg, setErrorMsg] = useState("");
-            const [activeStage, setActiveStage] = useState("5-6");
-            
-            // Zustand für das offene Modul (Modal)
-            const [selectedModule, setSelectedModule] = useState(null);
+            const [user, setUser] = React.useState(null);
+            const [isAuthenticating, setIsAuthenticating] = React.useState(false);
+            const [studentData, setStudentData] = React.useState({ completedTasks: [] });
+            const [activeModal, setActiveModal] = React.useState(null);
+            const [errorMsg, setErrorMsg] = React.useState("");
 
-            useEffect(() => {
-                const bootstrap = async () => {
-                    try {
-                        await msalInitPromise;
-                        await msalInstance.handleRedirectPromise();
-                        
-                        let activeAccount = msalInstance.getActiveAccount();
-                        if (!activeAccount && msalInstance.getAllAccounts().length > 0) {
-                            activeAccount = msalInstance.getAllAccounts()[0];
-                            msalInstance.setActiveAccount(activeAccount);
-                        }
-
-                        if (activeAccount) {
-                            setUser({ name: activeAccount.name, username: activeAccount.username });
-                            fetchMyData(activeAccount);
-                        } else {
-                            setAuthRequired(true);
-                            setLoading(false);
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        setAuthRequired(true);
-                        setLoading(false);
-                    }
-                };
-                bootstrap();
-            }, []);
-
-            const handleLogin = () => {
-                setLoading(true);
-                msalInstance.loginRedirect({ scopes: ["Sites.Read.All"] });
-            };
-
-            const handleLogout = () => {
-                msalInstance.logoutRedirect({ postLogoutRedirectUri: window.location.origin });
-            };
-
-            const fetchMyData = async (account) => {
+            // LOGIN
+            const handleLogin = async () => {
+                setIsAuthenticating(true);
+                setErrorMsg("");
                 try {
-                    const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["Sites.Read.All"], account });
-                    const url = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${MS_CONFIG.listId}/items?$expand=fields&$top=999`;
-                    const res = await fetch(url, { headers: { Authorization: `Bearer ${tokenRes.accessToken}` }});
-                    
-                    if (!res.ok) throw new Error("Fehler beim Abrufen der SharePoint-Daten.");
-                    const data = await res.json();
-                    
-                    const myRecord = data.value.find(item => 
-                        item.fields.Title && item.fields.Title.toLowerCase() === account.username.toLowerCase()
-                    );
-
-                    if (myRecord) {
-                        const f = myRecord.fields;
-                        const completedArray = f.Erledigte_Module ? f.Erledigte_Module.split(',').map(m => parseInt(m.trim())).filter(n => !isNaN(n)) : [];
-                        
-                        let parsedDates = {};
-                        if (f.Modul_Daten) {
-                            try { parsedDates = JSON.parse(f.Modul_Daten); } catch(e) {}
-                        }
-
-                        setStudentData({
-                            vorname: f.Vorname || "",
-                            nachname: f.Nachname || "",
-                            klasse: f.Klasse || "",
-                            completedTasks: completedArray,
-                            moduleDates: parsedDates
-                        });
-                    } else {
-                        setErrorMsg("Deine E-Mail-Adresse wurde noch nicht in die Datenbank eingetragen. Bitte melde dich bei deiner Lehrkraft.");
-                    }
-                } catch (error) {
-                    if (error.name === "InteractionRequiredAuthError") {
-                        msalInstance.loginRedirect({ scopes: ["Sites.Read.All"] });
-                    } else {
-                        setErrorMsg("Fehler beim Laden deiner Daten.");
-                    }
-                } finally {
-                    setLoading(false);
+                    const loginResponse = await msalInstance.loginPopup({ scopes: ["user.read", "Sites.Read.All"] });
+                    setUser({ name: loginResponse.account.name, email: loginResponse.account.username });
+                    await fetchStudentData(loginResponse.account.username);
+                } catch (err) {
+                    console.error("Login Error:", err);
+                    setErrorMsg("Fehler bei der Anmeldung. Bitte schließe das Popup nicht zu früh.");
+                    setIsAuthenticating(false);
                 }
             };
 
-            if (loading) {
-                return (
-                    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6">
-                        <div className="spinner mb-6"></div>
-                        <p className="text-sm font-black uppercase text-slate-400 tracking-widest text-center">Lade Profil...</p>
-                    </div>
-                );
-            }
+            // LOGOUT
+            const handleLogout = () => {
+                msalInstance.logoutPopup();
+                setUser(null);
+            };
 
-            if (authRequired) {
+            // DATEN AUS SHAREPOINT ABRUFEN
+            const fetchStudentData = async (email) => {
+                try {
+                    const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["Sites.Read.All"], account: msalInstance.getActiveAccount() });
+                    const url = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${MS_CONFIG.listId}/items?$filter=fields/Title eq '${email}'&$expand=fields`;
+                    
+                    const response = await fetch(url, { headers: { "Authorization": `Bearer ${tokenRes.accessToken}`, "Accept": "application/json" } });
+                    const data = await response.json();
+
+                    if (data.value && data.value.length > 0) {
+                        const fields = data.value[0].fields;
+                        const tasks = fields.Erledigte_Module ? fields.Erledigte_Module.split(',').map(s => parseInt(s.trim())) : [];
+                        setStudentData({
+                            id: data.value[0].id,
+                            vorname: fields.Vorname || "Schüler",
+                            klasse: fields.Klasse || "-",
+                            completedTasks: tasks
+                        });
+                    } else {
+                        // Dummy-Daten, falls der Schüler noch nicht in der Datenbank ist (für Demo-Zwecke)
+                        setStudentData({ vorname: "Gast", klasse: "-", completedTasks: [] });
+                        setErrorMsg("Achtung: Deine E-Mail-Adresse wurde noch nicht im System hinterlegt. Dies ist ein Gast-Modus.");
+                    }
+                } catch (err) {
+                    console.error("Fetch Error:", err);
+                    setErrorMsg("Konnte keine Daten abrufen. Bist du mit dem Internet verbunden?");
+                } finally {
+                    setIsAuthenticating(false);
+                }
+            };
+
+            // WENN NICHT EINGELOGGT
+            if (!user) {
                 return (
-                    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6">
-                        <div className="bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-2xl max-w-md w-full text-center border border-slate-100">
-                            <div className="mx-auto w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 text-[#BF0D3E] shadow-sm">
-                                <Icon name="graduation-cap" size={40} />
+                    <div className="min-h-screen flex items-center justify-center p-4">
+                        <div className="bg-white max-w-md w-full rounded-3xl shadow-xl overflow-hidden border border-slate-100 p-8 text-center">
+                            <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Icon name="graduation-cap" size={48} className="text-thoma-red" />
                             </div>
-                            <h2 className="text-2xl sm:text-3xl font-black mb-3 uppercase tracking-tighter text-slate-800">Medienpass</h2>
-                            <p className="text-slate-500 mb-8 font-medium text-sm sm:text-base leading-relaxed">Bitte melde dich mit deiner Schul-E-Mail-Adresse an, um deinen Fortschritt zu sehen.</p>
+                            <h1 className="text-3xl font-black text-slate-800 mb-2 tracking-tight">Medienpass</h1>
+                            <p className="text-slate-500 mb-8 font-medium">Gymnasium Thomaeum</p>
+                            {errorMsg && <p className="text-red-600 text-sm mb-6 bg-red-50 p-3 rounded-xl border border-red-100">{errorMsg}</p>}
                             <button 
                                 onClick={handleLogin} 
-                                className="w-full text-white font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all shadow-lg active:scale-95" 
-                                style={{ backgroundColor: THOMA_RED }}>
-                                Anmelden
+                                disabled={isAuthenticating}
+                                className="w-full bg-thoma-red hover:bg-red-800 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
+                            >
+                                {isAuthenticating ? <div className="spinner"></div> : <><Icon name="log-in" size={20} /> Mit Microsoft verbinden</>}
                             </button>
                         </div>
                     </div>
                 );
             }
 
-            if (errorMsg) {
-                return (
-                    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6">
-                        <div className="bg-white p-8 rounded-[2.5rem] shadow-xl max-w-md w-full text-center border border-red-100">
-                            <div className="mx-auto w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 text-red-500">
-                                <Icon name="user-x" size={32} />
-                            </div>
-                            <h2 className="text-xl font-black mb-2 text-slate-800">Kein Profil gefunden</h2>
-                            <p className="text-slate-500 mb-6 text-sm">{errorMsg}</p>
-                            <button onClick={handleLogout} className="bg-slate-100 text-slate-600 font-bold uppercase px-6 py-3 rounded-xl w-full">Abmelden</button>
-                        </div>
-                    </div>
-                );
-            }
-
-            const totalCompleted = studentData ? studentData.completedTasks.length : 0;
-            const progressPercent = Math.round((totalCompleted / 18) * 100);
+            // FORTSCHRITT BERECHNEN
+            const progress = Math.round((studentData.completedTasks.length / ALL_MODULES.length) * 100) || 0;
+            const skillsModules = ALL_MODULES.filter(m => m.category === "Skills");
+            const reflexionModules = ALL_MODULES.filter(m => m.category === "Reflexion");
 
             return (
-                <div className="min-h-screen flex flex-col bg-slate-50 font-sans pb-10 relative">
-                    
-                    {/* OVERLAY / MODAL: Wissensspeicher */}
-                    {selectedModule && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm">
-                            <div className="bg-white rounded-[2.5rem] w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden relative">
-                                {/* Modal Header */}
-                                <div className="bg-[#BF0D3E] text-white p-6 sm:p-8 flex justify-between items-center shrink-0">
-                                    <div>
-                                        <span className="text-red-200 text-[10px] font-black uppercase tracking-widest mb-1 block">Wissensspeicher • Modul {selectedModule.id}</span>
-                                        <h2 className="text-2xl sm:text-3xl font-black tracking-tight">{selectedModule.title}</h2>
+                <div className="min-h-screen pb-12">
+                    {/* MODAL (WISSENSSPEICHER & AUFGABEN) */}
+                    {activeModal && (
+                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                            <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                                
+                                {/* Header des Modals */}
+                                <div className={`p-6 sm:p-8 flex justify-between items-start text-white ${activeModal.category === 'Reflexion' ? 'bg-indigo-600' : 'bg-emerald-600'}`}>
+                                    <div className="flex items-center gap-4">
+                                        <div className="bg-white/20 p-3 rounded-2xl">
+                                            <Icon name={activeModal.icon} size={32} />
+                                        </div>
+                                        <div>
+                                            <p className="text-white/80 font-bold text-xs uppercase tracking-widest mb-1">{activeModal.category}</p>
+                                            <h2 className="text-2xl sm:text-3xl font-black">{activeModal.title}</h2>
+                                        </div>
                                     </div>
-                                    <button onClick={() => setSelectedModule(null)} className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-2xl transition-all shadow-sm active:scale-95 border border-white/30" title="Schließen">
-                                        <Icon name="x" size={20} />
-                                        <span className="font-bold uppercase tracking-wider text-xs hidden sm:inline">Schließen</span>
+                                    <button onClick={() => setActiveModal(null)} className="bg-white/20 hover:bg-white/40 rounded-full p-2 transition-colors">
+                                        <Icon name="x" size={24} />
                                     </button>
                                 </div>
 
-                                {/* Modal Body (Scrollable) */}
+                                {/* Inhalt (Scrollbar) */}
                                 <div className="p-6 sm:p-8 overflow-y-auto">
-                                    {getModuleContent(selectedModule.id)}
+                                    
+                                    {/* Sektion 1: Wissen */}
+                                    <div className="mb-8">
+                                        <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight mb-4 flex items-center gap-2">
+                                            <Icon name="book-open" size={20} className="text-slate-400" /> 
+                                            Wissensspeicher
+                                        </h3>
+                                        <ul className="space-y-3">
+                                            {activeModal.wissen.map((w, i) => (
+                                                <li key={i} className="flex gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                                    <Icon name="check-circle-2" size={20} className={activeModal.category === 'Reflexion' ? 'text-indigo-500 shrink-0' : 'text-emerald-500 shrink-0'} />
+                                                    <span className="text-slate-700 font-medium">{w}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    {/* Sektion 2: NEU - Aufgaben / Missionen */}
+                                    {activeModal.aufgaben && activeModal.aufgaben.length > 0 && (
+                                        <div className="bg-amber-50 rounded-3xl p-6 border border-amber-200">
+                                            <h3 className="text-lg font-black text-amber-900 uppercase tracking-tight mb-4 flex items-center gap-2">
+                                                <Icon name="rocket" size={20} className="text-amber-600" /> 
+                                                Deine Missionen
+                                            </h3>
+                                            <p className="text-xs text-amber-700 font-bold mb-4 uppercase tracking-wider">Probier es aus:</p>
+                                            <ul className="space-y-3">
+                                                {activeModal.aufgaben.map((aufgabe, i) => (
+                                                    <li key={i} className="flex gap-3 bg-white p-4 rounded-2xl shadow-sm border border-amber-100">
+                                                        <Icon name="play" size={16} className="text-amber-500 shrink-0 mt-0.5" />
+                                                        <span className="text-amber-900 font-medium text-sm">{aufgabe}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Header - Mobile Optimiert */}
-                    <header className="bg-[#BF0D3E] text-white pt-12 pb-6 px-6 sm:px-8 shadow-md rounded-b-[2rem] sm:rounded-b-[3rem] relative z-10">
-                        <div className="max-w-4xl mx-auto flex justify-between items-start">
-                            <div className="mr-4">
-                                <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter mb-1">Hallo {studentData?.vorname}!</h1>
-                                <p className="text-red-200 font-bold text-sm sm:text-base opacity-90">Klasse {studentData?.klasse} • Gymnasium Thomaeum</p>
+                    {/* HEADER */}
+                    <header className="bg-thoma-red text-white pt-10 pb-16 px-6 sm:px-8 shadow-md rounded-b-[3rem] relative z-10">
+                        <div className="max-w-5xl mx-auto flex justify-between items-center">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
+                                    <Icon name="graduation-cap" size={32} />
+                                </div>
+                                <div>
+                                    <h1 className="text-2xl sm:text-4xl font-black tracking-tighter mb-1">Medienpass</h1>
+                                    <p className="text-red-200 font-bold text-sm">Gymnasium Thomaeum</p>
+                                </div>
                             </div>
-                            <button onClick={handleLogout} className="flex items-center gap-2 bg-white text-[#BF0D3E] hover:bg-slate-100 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl transition-all shadow-lg active:scale-95 shrink-0 mt-1 sm:mt-0" title="Abmelden">
-                                <Icon name="log-out" size={16} className="sm:w-[18px] sm:h-[18px]" />
-                                <span className="font-black uppercase tracking-wider text-[10px] sm:text-xs">Abmelden</span>
+                            <button onClick={handleLogout} className="bg-white/20 hover:bg-white/30 p-3 rounded-xl transition-all" title="Abmelden">
+                                <Icon name="log-out" size={20} />
                             </button>
-                        </div>
-                        
-                        {/* Fortschrittsbalken */}
-                        <div className="max-w-4xl mx-auto mt-8 bg-black/10 p-5 rounded-3xl backdrop-blur-sm">
-                            <div className="flex justify-between items-end mb-3">
-                                <span className="font-black uppercase tracking-widest text-xs sm:text-sm text-white">Dein Fortschritt</span>
-                                <span className="font-black text-2xl sm:text-3xl text-white">{progressPercent}%</span>
-                            </div>
-                            <div className="h-4 bg-black/20 rounded-full overflow-hidden shadow-inner relative">
-                                <div className="h-full bg-white rounded-full transition-all duration-1000 ease-out relative z-10" style={{ width: `${progressPercent}%` }}></div>
-                                {/* Trennlinien für die 3 Stufen (33% und 66%) */}
-                                <div className="absolute top-0 bottom-0 left-[33.33%] w-1 bg-black/30 z-20"></div>
-                                <div className="absolute top-0 bottom-0 left-[66.66%] w-1 bg-black/30 z-20"></div>
-                            </div>
-                            <p className="text-right mt-2 text-[10px] font-bold text-red-200 uppercase">{totalCompleted} von 18 Modulen geschafft</p>
                         </div>
                     </header>
 
-                    {/* Content / Module */}
-                    <main className="flex-grow max-w-4xl mx-auto w-full px-4 sm:px-8 mt-[-1rem] sm:mt-[-2rem] relative z-20">
+                    {/* FORTSCHRITTSKARTE */}
+                    <div className="max-w-5xl mx-auto px-4 sm:px-8 -mt-8 relative z-20 mb-8">
+                        <div className="bg-white rounded-[2rem] shadow-xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 border border-slate-100">
+                            <div>
+                                <h2 className="text-2xl font-black text-slate-800">Hallo {studentData.vorname}!</h2>
+                                <p className="text-slate-500 font-medium">Klasse {studentData.klasse} • {studentData.completedTasks.length} von {ALL_MODULES.length} Zertifikaten</p>
+                                {errorMsg && <p className="text-xs text-red-500 font-bold mt-2">{errorMsg}</p>}
+                            </div>
+                            <div className="w-full sm:w-1/3">
+                                <div className="flex justify-between text-sm font-black text-slate-700 mb-2">
+                                    <span>Fortschritt</span>
+                                    <span>{progress}%</span>
+                                </div>
+                                <div className="h-4 bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                                    <div className="h-full bg-gradient-to-r from-green-400 to-green-500 rounded-full transition-all duration-1000" style={{ width: `${progress}%` }}></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* MAIN CONTENT (Die zwei Säulen) */}
+                    <main className="max-w-5xl mx-auto px-4 sm:px-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                         
-                        {/* Navigation für die Jahrgangsstufen */}
-                        <div className="flex gap-3 mb-2 overflow-x-auto pb-4 scrollbar-hide pt-4 sm:pt-6">
-                            {["5-6", "7-8", "9-10"].map(stage => (
-                                <button 
-                                    key={stage} 
-                                    onClick={() => setActiveStage(stage)} 
-                                    className={`px-6 py-3 rounded-2xl font-black transition-all whitespace-nowrap shadow-sm ${activeStage === stage ? 'text-white shadow-md scale-105' : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'}`} 
-                                    style={activeStage === stage ? { backgroundColor: THOMA_RED } : {}}
-                                >
-                                    Klasse {stage}
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="mb-10">
-                            <h3 className="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
-                                <Icon name="wrench" size={24} className="text-[#BF0D3E]" /> Skills (Anwendung)
-                            </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                                {ALL_MODULES.filter(m => m.stage === activeStage && m.category === 'skills').map(modul => {
-                                    const isDone = studentData?.completedTasks.includes(modul.id);
-                                    const moduleData = studentData?.moduleDates[modul.id];
-                                    let dateDone = "—";
-                                    let teacherName = "";
-                                    if (moduleData) {
-                                        if (typeof moduleData === 'string') { dateDone = moduleData; }
-                                        else { dateDone = moduleData.datum || "—"; teacherName = moduleData.lehrer || ""; }
-                                    }
-
+                        {/* Säule 1: Skills */}
+                        <section>
+                            <div className="flex items-center gap-3 mb-6 px-2">
+                                <div className="p-2 bg-emerald-100 text-emerald-600 rounded-xl"><Icon name="wrench" size={20} /></div>
+                                <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">Anwendung (Skills)</h2>
+                            </div>
+                            <div className="grid gap-4">
+                                {skillsModules.map(modul => {
+                                    const isDone = studentData.completedTasks.includes(modul.id);
                                     return (
                                         <div 
                                             key={modul.id} 
-                                            onClick={() => { if (isDone) setSelectedModule(modul); }}
-                                            className={`bg-white rounded-3xl p-5 sm:p-6 border-2 transition-all flex flex-col h-full ${isDone ? 'border-green-400 shadow-green-100 shadow-lg cursor-pointer hover:-translate-y-1 hover:shadow-xl' : 'border-slate-100 shadow-sm opacity-90'}`}
+                                            onClick={() => isDone && setActiveModal(modul)}
+                                            className={`bg-white rounded-[2rem] p-5 border-2 transition-all flex items-center gap-4 ${isDone ? 'border-emerald-400 shadow-md hover:shadow-lg cursor-pointer hover:-translate-y-1' : 'border-slate-100 opacity-60 grayscale'}`}
                                         >
-                                            <div className="flex justify-between items-start mb-4">
-                                                <span className="text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 px-3 py-1 rounded-lg">Klasse {modul.stage}</span>
-                                                {isDone ? (
-                                                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white shadow-md">
-                                                        <Icon name="check" size={16} />
-                                                    </div>
-                                                ) : (
-                                                    <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-300">
-                                                        <Icon name="lock" size={14} />
-                                                    </div>
-                                                )}
+                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${isDone ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                                                <Icon name={modul.icon} size={28} />
                                             </div>
-                                            
-                                            <h3 className={`font-black text-lg sm:text-xl tracking-tight leading-tight mb-2 ${isDone ? 'text-slate-800' : 'text-slate-500'}`}>
-                                                {modul.title}
-                                            </h3>
-                                            
-                                            <div className="mt-auto">
-                                                {isDone ? (
-                                                    <div>
-                                                        <div className="text-xs font-bold text-green-600 flex flex-col gap-0.5 mt-3 mb-4">
-                                                            <span className="flex items-center gap-1">
-                                                                <Icon name="calendar-check" size={12} />
-                                                                Zertifiziert am {dateDone}
-                                                            </span>
-                                                            {teacherName && <span className="text-[10px] text-green-700 ml-4">durch {teacherName}</span>}
-                                                        </div>
-                                                        <div className="pt-3 border-t border-slate-100 text-center">
-                                                            <span className="text-[10px] font-black uppercase tracking-widest text-[#BF0D3E] flex items-center justify-center gap-2 group-hover:text-red-700">
-                                                                <Icon name="book-open" size={14} /> Wissensspeicher öffnen
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <p className="text-xs font-medium text-slate-400 mt-3">
-                                                        Noch nicht freigeschaltet.
-                                                    </p>
-                                                )}
+                                            <div className="flex-grow">
+                                                <h3 className="font-bold text-slate-800">{modul.title}</h3>
+                                                <p className="text-xs font-semibold text-slate-500 mt-1">{isDone ? 'Freigeschaltet • Klick für Infos' : 'Noch gesperrt'}</p>
+                                            </div>
+                                            <div>
+                                                {isDone ? <Icon name="check-circle-2" size={28} className="text-emerald-500" /> : <Icon name="lock" size={24} className="text-slate-300" />}
                                             </div>
                                         </div>
                                     );
                                 })}
                             </div>
-                        </div>
+                        </section>
 
-                        <div className="mb-4">
-                            <h3 className="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
-                                <Icon name="brain" size={24} className="text-[#BF0D3E]" /> Reflexion (Umgang)
-                            </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                                {ALL_MODULES.filter(m => m.stage === activeStage && m.category === 'reflexion').map(modul => {
-                                    const isDone = studentData?.completedTasks.includes(modul.id);
-                                    const moduleData = studentData?.moduleDates[modul.id];
-                                    let dateDone = "—";
-                                    let teacherName = "";
-                                    if (moduleData) {
-                                        if (typeof moduleData === 'string') { dateDone = moduleData; }
-                                        else { dateDone = moduleData.datum || "—"; teacherName = moduleData.lehrer || ""; }
-                                    }
-
+                        {/* Säule 2: Reflexion */}
+                        <section>
+                            <div className="flex items-center gap-3 mb-6 px-2">
+                                <div className="p-2 bg-indigo-100 text-indigo-600 rounded-xl"><Icon name="brain-circuit" size={20} /></div>
+                                <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">Umgang (Reflexion)</h2>
+                            </div>
+                            <div className="grid gap-4">
+                                {reflexionModules.map(modul => {
+                                    const isDone = studentData.completedTasks.includes(modul.id);
                                     return (
                                         <div 
                                             key={modul.id} 
-                                            onClick={() => { if (isDone) setSelectedModule(modul); }}
-                                            className={`bg-white rounded-3xl p-5 sm:p-6 border-2 transition-all flex flex-col h-full ${isDone ? 'border-green-400 shadow-green-100 shadow-lg cursor-pointer hover:-translate-y-1 hover:shadow-xl' : 'border-slate-100 shadow-sm opacity-90'}`}
+                                            onClick={() => isDone && setActiveModal(modul)}
+                                            className={`bg-white rounded-[2rem] p-5 border-2 transition-all flex items-center gap-4 ${isDone ? 'border-indigo-400 shadow-md hover:shadow-lg cursor-pointer hover:-translate-y-1' : 'border-slate-100 opacity-60 grayscale'}`}
                                         >
-                                            <div className="flex justify-between items-start mb-4">
-                                                <span className="text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 px-3 py-1 rounded-lg">Klasse {modul.stage}</span>
-                                                {isDone ? (
-                                                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white shadow-md">
-                                                        <Icon name="check" size={16} />
-                                                    </div>
-                                                ) : (
-                                                    <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-300">
-                                                        <Icon name="lock" size={14} />
-                                                    </div>
-                                                )}
+                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${isDone ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>
+                                                <Icon name={modul.icon} size={28} />
                                             </div>
-                                            
-                                            <h3 className={`font-black text-lg sm:text-xl tracking-tight leading-tight mb-2 ${isDone ? 'text-slate-800' : 'text-slate-500'}`}>
-                                                {modul.title}
-                                            </h3>
-                                            
-                                            <div className="mt-auto">
-                                                {isDone ? (
-                                                    <div>
-                                                        <div className="text-xs font-bold text-green-600 flex flex-col gap-0.5 mt-3 mb-4">
-                                                            <span className="flex items-center gap-1">
-                                                                <Icon name="calendar-check" size={12} />
-                                                                Zertifiziert am {dateDone}
-                                                            </span>
-                                                            {teacherName && <span className="text-[10px] text-green-700 ml-4">durch {teacherName}</span>}
-                                                        </div>
-                                                        <div className="pt-3 border-t border-slate-100 text-center">
-                                                            <span className="text-[10px] font-black uppercase tracking-widest text-[#BF0D3E] flex items-center justify-center gap-2 group-hover:text-red-700">
-                                                                <Icon name="book-open" size={14} /> Wissensspeicher öffnen
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <p className="text-xs font-medium text-slate-400 mt-3">
-                                                        Noch nicht freigeschaltet.
-                                                    </p>
-                                                )}
+                                            <div className="flex-grow">
+                                                <h3 className="font-bold text-slate-800">{modul.title}</h3>
+                                                <p className="text-xs font-semibold text-slate-500 mt-1">{isDone ? 'Freigeschaltet • Klick für Infos' : 'Noch gesperrt'}</p>
+                                            </div>
+                                            <div>
+                                                {isDone ? <Icon name="check-circle-2" size={28} className="text-indigo-500" /> : <Icon name="lock" size={24} className="text-slate-300" />}
                                             </div>
                                         </div>
                                     );
                                 })}
                             </div>
-                        </div>
+                        </section>
+
                     </main>
                 </div>
             );
