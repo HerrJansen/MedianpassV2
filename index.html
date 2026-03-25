@@ -60,7 +60,7 @@
             return <span className={`inline-flex items-center justify-center ${className}`} dangerouslySetInnerHTML={{ __html: svg }} />;
         };
 
-        // --- 24 MODULE ---
+        // --- MODULE BASIS-DATEN ---
         const ALL_MODULES = [
             { id: 1, title: "Hardware-Führerschein", stage: "5-6", category: "skills", icon: "monitor" }, 
             { id: 2, title: "Dateimanagement", stage: "5-6", category: "skills", icon: "folder" }, 
@@ -88,36 +88,230 @@
             { id: 24, title: "Datenökonomie", stage: "9-10", category: "reflexion", icon: "database" }
         ];
 
-        // --- THEMES & LAYOUT COMPONENT ---
-        const getTheme = (stage) => {
-            if (stage === "5-6") return {
-                introTitle: "Modul geschafft!",
-                introText: "Herzlichen Glückwunsch! Du hast dieses Modul gemeistert. Hier ist dein Spickzettel:",
-                bgHeader: "bg-green-50 border-green-200", textHeader: "text-green-900", iconHeader: "text-green-600",
-                missionBox: "bg-amber-50 border-amber-200", missionTitle: "text-amber-900", missionIconText: "text-amber-600",
-                missionListBg: "bg-white border-amber-100", missionTitleText: "Deine Missionen 🚀"
-            };
-            if (stage === "7-8") return {
-                introTitle: "Erfolgreich zertifiziert!",
-                introText: "Sehr gut! Hier findest du die wichtigsten Fakten und Methoden im Überblick:",
-                bgHeader: "bg-indigo-50 border-indigo-200", textHeader: "text-indigo-900", iconHeader: "text-indigo-600",
-                missionBox: "bg-blue-50 border-blue-200", missionTitle: "text-blue-900", missionIconText: "text-blue-600",
-                missionListBg: "bg-white border-blue-100", missionTitleText: "Praxis-Challenges ⚡"
-            };
-            return {
-                introTitle: "Modul abgeschlossen",
-                introText: "Relevantes Fachwissen und Best Practices für deinen weiteren Weg:",
-                bgHeader: "bg-slate-100 border-slate-200", textHeader: "text-slate-800", iconHeader: "text-slate-600",
-                missionBox: "bg-emerald-50 border-emerald-200", missionTitle: "text-emerald-900", missionIconText: "text-emerald-600",
-                missionListBg: "bg-white border-emerald-100", missionTitleText: "Transfer-Aufgaben 🎯"
-            };
+        // --- ZENTRALE DATENBANK FÜR INHALTE & MISSIONEN ---
+        const MODULE_CONTENT_DATA = {
+            // KLASSE 5-6 (SKILLS)
+            1: {
+                sections: [
+                    { title: "1. Technische Bedienung", text: "Computer, Tablet & Co. sicher steuern.", items: ["Maus: Linksklick zum Auswählen, Rechtsklick für Menüs (Optionen).", "Tastatur: Großschreibung mit der Shift-Taste (Pfeil nach oben).", "Kabel immer am Stecker ziehen, niemals am Kabel selbst reißen."] },
+                    { title: "2. Kriterien für Qualität", text: "Gesundheit und Pflege sind wichtig.", items: ["Ergonomie: Der Bildschirm sollte auf Augenhöhe sein, sitze gerade.", "Sauberkeit: Trinke nicht direkt über der Tastatur.", "Sicherheit: Sperre deinen Bildschirm (Windows-Taste + L), wenn du weggehst."] }
+                ],
+                missions: ["Mache einen Rechtsklick auf den Desktop und öffne ein neues Menü.", "Schreibe deinen Namen am PC einmal komplett in GROSSBUCHSTABEN.", "Sperre deinen Computer mit der Tastenkombination (Windows + L).", "Prüfe deine Sitzhaltung: Sind deine Augen auf Höhe des oberen Bildschirmrands?", "Zeige an deinem Tablet/PC, wo man die Bildschirmhelligkeit verstellt."]
+            },
+            2: {
+                sections: [
+                    { title: "1. Technische Bedienung", text: "Ordnung im digitalen Rucksack.", items: ["Neuen Ordner erstellen: Rechtsklick -> Neu -> Ordner.", "Dateien verschieben: Datei anklicken, Maustaste gedrückt halten und in den Ordner ziehen (Drag & Drop).", "Cloud: Speichere wichtige Schulsachen in deinem OneDrive, damit sie nicht verloren gehen."] },
+                    { title: "2. Kriterien für Qualität", text: "So findest du alles wieder.", items: ["Logische Namen: Nenne Dateien nicht 'asdf.docx', sondern '2026-Deutsch-Referat'.", "Struktur: Lege für jedes Schulfach einen eigenen Hauptordner an.", "Aufräumen: Lösche alte Dateien regelmäßig und leere den Papierkorb."] }
+                ],
+                missions: ["Erstelle auf dem Desktop einen Ordner namens 'Schule'.", "Erstelle in dem Ordner 'Schule' drei Unterordner für deine Lieblingsfächer.", "Benenne eine beliebige Datei auf deinem Gerät sinnvoll um.", "Verschiebe eine Datei in einen deiner neuen Ordner.", "Finde den digitalen 'Papierkorb' und leere ihn."]
+            },
+            3: {
+                sections: [
+                    { title: "1. Technische Bedienung", text: "Texte schreiben und gestalten.", items: ["Speichern: Drücke oft STRG + S, damit dein Text nicht verloren geht.", "Rückgängig: Ein Fehler passiert? Drücke STRG + Z.", "Formatvorlagen: Nutze für Überschriften die Formatvorlagen oben im Menü (Überschrift 1), mach sie nicht einfach nur fett."] },
+                    { title: "2. Kriterien für Qualität", text: "So wird dein Text gut lesbar.", items: ["Schriftart: Wähle ruhige Schriften (wie Arial oder Calibri) in Größe 11 oder 12.", "Absätze: Drücke nach einem Sinnabschnitt 'Enter' für eine Leerzeile. Das Auge braucht Pausen.", "PDF Export: Speichere fertige Hausaufgaben als PDF, damit sich bei deinem Lehrer nichts verschiebt."] }
+                ],
+                missions: ["Tippe einen kurzen Satz und mache ein Wort davon fett.", "Nutze die Formatvorlage 'Überschrift 1' für ein neues Wort.", "Markiere einen Text und kopiere ihn mit STRG+C und füge ihn mit STRG+V wieder ein.", "Mache einen Fehler und nutze STRG+Z, um ihn rückgängig zu machen.", "Speichere dein Dokument einmal als normales Word-Dokument und einmal als PDF."]
+            },
+            7: {
+                sections: [
+                    { title: "1. Technische Bedienung", text: "Folien bauen in PowerPoint/Keynote.", items: ["Neue Folie: Klicke auf 'Neue Folie' und wähle das passende Layout (z.B. 'Titel und Inhalt').", "Bilder einfügen: Gehe auf 'Einfügen' -> 'Bilder' und passe die Größe an den Ecken an.", "Design-Ideen: Nutze den automatischen 'Designer', um Folien schnell hübsch zu machen."] },
+                    { title: "2. Kriterien für Qualität", text: "Was eine Präsentation spannend macht.", items: ["Wenig Text: Auf Folien gehören nur Stichpunkte, keine ganzen Sätze!", "Große Bilder: Ein starkes Bild ist besser als 10 Zeilen Text.", "Frei sprechen: Die Folie ist nur deine Unterstützung, du bist der Star des Vortrags!"] }
+                ],
+                missions: ["Erstelle eine Titelfolie mit deinem Namen und dem Thema 'Mein Lieblingstier'.", "Füge eine zweite Folie hinzu und schreibe exakt 3 kurze Stichpunkte auf.", "Füge ein Bild deines Lieblingstiers ein und ziehe es groß.", "Teste den Präsentations-Modus (Vollbild) und klicke dich durch.", "Versuche, eine Minute über dein Tier zu sprechen, ohne den Text von der Folie abzulesen."]
+            },
+            // KLASSE 5-6 (REFLEXION)
+            4: {
+                sections: [
+                    { title: "Die goldene Regel", text: "Vergiss nie den Menschen am anderen Ende.", items: ["Schreibe im Chat nur Dinge, die du der Person auch direkt ins Gesicht sagen würdest.", "Ein rotes Tuch: ALLES IN GROSSBUCHSTABEN ZU SCHREIBEN bedeutet im Internet 'Schreien'. Lass das lieber!"] },
+                    { title: "Witze und Ironie", text: "Oft kommt es anders an, als du denkst.", items: ["Im Chat hört man dein Lachen nicht. Nutze Emojis (😂, 😜), damit ein Witz nicht als Beleidigung verstanden wird.", "Wenn dich etwas ärgert: Erst tief durchatmen, dann tippen. Das Internet vergisst nicht."] }
+                ],
+                missions: ["Schreibe eine sehr freundliche Nachricht an einen Klassenkameraden.", "Schreibe einen Satz in GROSSBUCHSTABEN und vergleiche, wie aggressiv er wirkt.", "Lies dir deine letzten 3 Nachrichten in einem Chat durch: Waren sie höflich?", "Finde ein passendes Emoji, das den Satz 'Das war ja super' ironisch (witzig) wirken lässt.", "Überlege dir eine Regel für euren Klassenchat und besprich sie mit deinem Sitznachbarn."]
+            },
+            5: {
+                sections: [
+                    { title: "Cybermobbing erkennen", text: "Es ist mehr als nur ein blöder Spruch.", items: ["Wenn jemand im Netz absichtlich, wiederholt und gemein fertiggemacht wird, ist das Cybermobbing.", "Dazu gehört auch das heimliche Teilen von peinlichen Fotos oder der Ausschluss aus Klassengruppen."] },
+                    { title: "Richtig reagieren", text: "Du bist nicht allein!", items: ["Nicht zurückbeleidigen! Das macht es oft schlimmer.", "Beweise sichern: Mache Screenshots von den fiesen Nachrichten, bevor sie gelöscht werden.", "Hilfe holen: Sprich sofort mit deinen Eltern, Lehrern oder melde dich bei Portalen wie 'Nummer gegen Kummer'."] }
+                ],
+                missions: ["Finde heraus, wie man an deinem Gerät einen Screenshot (Bildschirmfoto) macht.", "Notiere dir die Telefonnummer oder Webseite der 'Nummer gegen Kummer'.", "Überlegt zu zweit: Wie würdet ihr reagieren, wenn ein Mitschüler im Chat ausgelacht wird?", "Schreibe auf, wem du dich anvertrauen würdest, wenn du online geärgert wirst.", "Finde in eurer Schul-App oder auf der Homepage heraus, ob es Vertrauenslehrer gibt."]
+            },
+            6: {
+                sections: [
+                    { title: "Clever suchen", text: "Wie ein Meisterdetektiv im Netz.", items: ["Nutze Schlagwörter (Keywords) statt ganzer Sätze. Falsch: 'Was fressen Eisbären?'. Richtig: 'Eisbär Nahrung'.", "Das Minus-Zeichen schließt Dinge aus (z.B. 'Jaguar -Auto' findet nur das Tier).", "Nutze Kindersuchmaschinen wie FragFinn.de oder Blinde-Kuh.de, um sichere und leicht verständliche Texte zu finden."] },
+                    { title: "Treffer bewerten", text: "Nicht alles was oben steht, ist wahr.", items: ["Achtung bei 'Anzeige' oder 'Gesponsert': Dafür hat eine Firma Geld bezahlt. Der beste Treffer kommt oft erst danach.", "Lies den kurzen Text (Snippet) unter dem blauen Link, bevor du wahllos klickst."] }
+                ],
+                missions: ["Suche auf Blinde-Kuh.de nach Informationen über den Planeten Mars.", "Nutze bei Google den Trick mit dem Minus: Suche nach 'Römer -Auto'.", "Suche nach dem Wort 'Schuhe' und zähle, wie viele der ersten Ergebnisse als 'Anzeige' markiert sind.", "Schreibe drei gute Keywords auf, um etwas über das Römische Reich herauszufinden.", "Lies nur den Vorschautext (Snippet) eines Suchergebnisses und überlege, ob es deine Frage beantwortet."]
+            },
+            19: {
+                sections: [
+                    { title: "Warum Passwörter wichtig sind", text: "Dein digitaler Haustürschlüssel.", items: ["Ein schlechtes Passwort (wie '123456' oder 'Hallo') lässt sich von Computerprogrammen in einer Sekunde knacken.", "Verrate dein Passwort niemals deinen Freunden! Nur dir und evtl. deinen Eltern."] },
+                    { title: "Das perfekte Passwort", text: "Lang und unmöglich zu erraten.", items: ["Länge ist wichtiger als Verrücktheit! Mindestens 12 Zeichen.", "Der Merksatz-Trick: Denke dir einen Quatsch-Satz aus. Z.B. 'Ich esse jeden Morgen 3 grüne Äpfel!' wird zu 'IejM3gÄ!'. Das kann niemand erraten!"] }
+                ],
+                missions: ["Erfinde einen verrückten Merksatz für ein neues Passwort.", "Wandle deinen Merksatz in ein Passwort um (nur Anfangsbuchstaben und Zahlen).", "Prüfe gedanklich dein aktuelles Schul-Passwort: Ist es länger als 8 Zeichen?", "Überlege dir, warum 'Hund123' ein furchtbares Passwort ist.", "Finde heraus, was ein 'Passwort-Manager' ist (z.B. durch eine kurze Internetsuche)."]
+            },
+
+            // KLASSE 7-8 (SKILLS)
+            8: {
+                sections: [
+                    { title: "1. Technische Bedienung", text: "Video und Bild in Szene setzen.", items: ["Schnitt-Tools: Nutze Programme wie iMovie, CapCut oder Clipchamp. Importiere deine Roh-Clips.", "Zeitleiste (Timeline): Ordne deine Clips nacheinander an. Nutze die 'Schere' (Split), um langweilige Pausen herauszuschneiden.", "Audio-Spur: Lege Hintergrundmusik auf eine zweite Spur und drehe die Lautstärke so weit runter, dass man Sprecher noch versteht."] },
+                    { title: "2. Kriterien für Qualität", text: "Was ein gutes Video ausmacht.", items: ["Roter Faden: Dein Video braucht einen klaren Anfang (Hook), einen Mittelteil und ein Ende.", "Guter Ton: Ein wackeliges Bild verzeiht man, schlechten Ton (Windrauschen) schalten Zuschauer sofort ab.", "Kurz & Knackig: Schneide rücksichtslos alles raus, was die Geschichte nicht voranbringt."] }
+                ],
+                missions: ["Nimm ein 10-sekündiges Video mit deinem Gerät auf.", "Öffne ein Videoschnitt-Programm und lade den Clip in die Zeitleiste.", "Schneide den Clip genau in der Mitte durch (Split) und lösche die zweite Hälfte.", "Lege einen kurzen Text-Titel über den Beginn deines Videos.", "Exportiere dein Projekt als fertige .MP4 oder .MOV Datei."]
+            },
+            9: {
+                sections: [
+                    { title: "1. Technische Bedienung", text: "Mit Daten rechnen in Excel/Calc.", items: ["Zellen ansprechen: Jedes Kästchen hat eine Adresse (z.B. B4).", "Formeln starten: Eine Formel beginnt IMMER mit einem Gleichheitszeichen (=).", "Die Summe: Nutze =SUMME(A1:A5), um alle Zahlen in diesem Bereich blitzschnell zusammenzurechnen."] },
+                    { title: "2. Kriterien für Qualität", text: "Daten verständlich machen.", items: ["Übersichtlichkeit: Markiere Überschriften fett und nutze Rahmenlinien für Tabellen.", "Visuell aufbereiten: Rohe Zahlen sind langweilig. Markiere die Daten und erstelle ein 'Kreisdiagramm' oder 'Säulendiagramm'.", "Beschriftung: Ein Diagramm ohne Achsenbeschriftung und Titel ist wertlos."] }
+                ],
+                missions: ["Öffne Excel/Calc und trage in Spalte A deine 3 Lieblingsessen ein.", "Trage in Spalte B fiktive Preise für diese Essen ein.", "Berechne in einer neuen Zelle die Summe der Preise mit der Formel =SUMME().", "Markiere die Essen und die Preise und erstelle ein Säulendiagramm.", "Gib deinem Diagramm einen passenden Titel (z.B. 'Meine Essenskosten')."]
+            },
+            20: {
+                sections: [
+                    { title: "1. Technische Bedienung", text: "Fotos optimieren.", items: ["Zuschneiden (Crop): Entferne störende Ränder, um den Fokus auf das Hauptmotiv zu lenken.", "Helligkeit & Kontrast: Heller machen ist gut, aber achte darauf, dass helle Flächen nicht 'ausbrennen' (komplett weiß werden).", "Farbstich: Nutze den Weißabgleich (Temperatur), wenn ein Foto drinnen zu gelb oder draußen zu blau wirkt."] },
+                    { title: "2. Kriterien für Qualität", text: "Natürlichkeit vs. Manipulation.", items: ["Weniger ist mehr: Ein Filter auf 100% sieht oft künstlich aus. Reduziere die Deckkraft auf 30-50%.", "Aussagekraft: Bearbeite ein Bild so, dass die Stimmung (z.B. düster oder fröhlich) zum Thema passt.", "Ethik: Verändere niemals Körperproportionen von Menschen. Das erzeugt falsche Schönheitsideale."] }
+                ],
+                missions: ["Mache ein Foto von einem Gegenstand vor dir.", "Öffne das Foto in einer Bearbeitungs-App und schneide die Ränder weg (Crop).", "Erhöhe den Kontrast des Bildes leicht.", "Lege einen Schwarz-Weiß-Filter auf das Bild.", "Vergleiche das Original mit der bearbeiteten Version: Was wirkt besser?"]
+            },
+            21: {
+                sections: [
+                    { title: "1. Technische Bedienung", text: "Stimme aufnehmen und schneiden.", items: ["Pegeln: Sprich ins Mikrofon. Der Ausschlag sollte im grünen/gelben Bereich sein. Rot bedeutet, es 'übersteuert' (kratzt).", "Schnitt: Markiere Versprecher in der Tonspur (z.B. in Audacity) und drücke Entf.", "Export: Speichere Podcasts immer als .MP3-Datei, um Speicherplatz zu sparen."] },
+                    { title: "2. Kriterien für Qualität", text: "Zuhören leicht gemacht.", items: ["Raumklang: Nimm nicht in leeren Räumen auf (Hall). Ein Raum mit Teppich oder Vorhängen klingt viel professioneller.", "Sprechtempo: Sprich 20% langsamer als normal und betone deutlich.", "Struktur: Beginne mit einem Intro, das sofort verrät, worum es im Podcast geht."] }
+                ],
+                missions: ["Nimm eine kurze Sprachnachricht (15 Sek.) auf: Begrüße deine unsichtbaren Hörer.", "Höre dir die Aufnahme an: Gibt es Hall oder störende Hintergrundgeräusche?", "Versuche, eine Pause von 3 Sekunden absichtlich in der Aufnahme zu lassen.", "Finde in deinem Aufnahmeprogramm die Funktion, um diese 3 Sekunden herauszuschneiden.", "Überlege dir einen coolen Titel für einen eigenen Podcast."]
+            },
+            // KLASSE 7-8 (REFLEXION)
+            10: {
+                sections: [
+                    { title: "Fremde Werke nutzen", text: "Du darfst nicht einfach klauen.", items: ["Bilder, Texte und Musik aus dem Internet gehören demjenigen, der sie gemacht hat (Urheber).", "Wenn du einfach ein Google-Bild für deine öffentliche Präsentation nutzt, begehst du eine Urheberrechtsverletzung."] },
+                    { title: "Die legale Lösung", text: "Creative Commons & freie Bilder.", items: ["Nutze Bilddatenbanken wie Pixabay.com oder Unsplash.com. Diese Bilder sind explizit zur freien Nutzung freigegeben.", "Quellenangabe: Gib bei Texten immer an, woher du sie hast. Zitat in Anführungszeichen setzen und den Link / Autor nennen!"] }
+                ],
+                missions: ["Suche auf der Plattform 'Pixabay.com' nach einem Foto von einer Stadt.", "Finde heraus, was unter dem Bild bei 'Lizenz' steht (meistens frei für kommerzielle Nutzung).", "Kopiere einen Satz aus Wikipedia und setze ihn korrekt in Anführungszeichen.", "Schreibe die genaue URL (den Link) als Quellenangabe unter das Zitat.", "Erkläre einem Mitschüler in einem Satz, was das Urheberrecht schützt."]
+            },
+            11: {
+                sections: [
+                    { title: "Fake News erkennen", text: "Glaube nicht alles, was online steht.", items: ["Checke die Quelle: Wer hat das geschrieben? Eine bekannte Zeitung oder ein anonymer Blog?", "Reißerische Titel (Clickbait): Wenn Überschriften stark emotional machen ('Du wirst nicht glauben was passiert!'), ist die Nachricht oft übertrieben oder falsch.", "Bilder-Rückwärtssuche: Oft werden alte Bilder für neue Lügen recycelt. Man kann Bilder bei Google hochladen und prüfen, woher sie wirklich kommen."] },
+                    { title: "Die 2-Quellen-Regel", text: "Sicher gehen beim Recherchieren.", items: ["Wenn du eine krasse Behauptung liest, suche nach dem Thema bei Google News. Berichten auch seriöse Tagesschau oder Spiegel darüber? Wenn nicht, ist es meist Fake."] }
+                ],
+                missions: ["Suche eine aktuelle Schlagzeile auf einer Nachrichten-Webseite (z.B. tagesschau.de).", "Suche dasselbe Thema bei Google. Berichten auch andere Medien darüber?", "Suche das Impressum auf eurer Schul-Homepage (wer ist verantwortlich?).", "Finde heraus, wie die 'Google Bilderrückwärtssuche' funktioniert.", "Diskutiert kurz: Warum erfinden Menschen eigentlich absichtlich Fake News?"]
+            },
+            12: {
+                sections: [
+                    { title: "Der Preis des 'Kostenlosen'", text: "Du bezahlst mit deinen Daten.", items: ["Instagram, TikTok und YouTube sind nicht gratis. Sie sammeln Daten darüber, wie lange du dir was ansiehst, um ein Profil von dir zu erstellen.", "Tracker: Unsichtbare Programme verfolgen dich über verschiedene Webseiten hinweg, um dir passende Werbung anzuzeigen."] },
+                    { title: "Deine Privatsphäre schützen", text: "Nimm die Kontrolle zurück.", items: ["Cookie-Banner: Klicke nicht blind auf 'Alle akzeptieren'. Nimm dir die 3 Sekunden, um auf 'Nur essenzielle' oder 'Ablehnen' zu klicken.", "Profile auf Privat: Stelle deine Social-Media-Accounts so ein, dass nur deine Freunde deine Bilder sehen können."] }
+                ],
+                missions: ["Öffne eine beliebige Nachrichten-Website und lehne im Cookie-Banner alles ab, was nicht zwingend nötig ist.", "Prüfe in den Einstellungen deines Handys, welche Apps Zugriff auf deinen Standort (GPS) haben.", "Entziehe einer App, die deinen Standort nicht braucht (z.B. ein Spiel), diese Berechtigung.", "Überprüfe, ob dein Instagram/TikTok-Konto auf 'Privat' oder 'Öffentlich' steht.", "Lösche den Verlauf und die Cookies in deinem Webbrowser."]
+            },
+            22: {
+                sections: [
+                    { title: "Die Macht des Algorithmus", text: "Warum du nicht aufhören kannst zu scrollen.", items: ["Algorithmen analysieren jede Millisekunde deines Verhaltens. Wenn du bei einem Katzenvideo 2 Sekunden länger stehen bleibst, bekommst du danach 10 weitere Katzenvideos.", "Endless Scroll: Es gibt kein 'Ende' mehr auf der Seite, was dein Gehirn austrickst und dich länger in der App hält."] },
+                    { title: "Die Filterblase", text: "Du siehst nur, was du magst.", items: ["Weil der Algorithmus dir nur zeigt, was du ohnehin gut findest, verlierst du den Blick für andere Meinungen. Du lebst in einer 'Filterblase'.", "Digital Wellbeing: Nutze die Bildschirmzeit-Funktion deines Handys, um dir selbst App-Limits zu setzen (z.B. max. 1h TikTok am Tag)."] }
+                ],
+                missions: ["Finde in den Einstellungen deines Handys die Statistik zur 'Bildschirmzeit' (Digital Wellbeing).", "Schreibe auf, welche App du diese Woche am längsten genutzt hast.", "Setze dir testweise ein App-Limit von 30 Minuten für deine meistgenutzte App.", "Like absichtlich 3 Videos/Beiträge zu einem Thema, das dich eigentlich nicht interessiert.", "Beobachte morgen: Hat sich dein Feed (deine Vorschläge) durch die 3 Likes verändert?"]
+            },
+
+            // KLASSE 9-10 (SKILLS)
+            13: {
+                sections: [
+                    { title: "1. Technische Bedienung", text: "Die Kunst des Prompt-Engineerings.", items: ["Rolle + Aufgabe + Format: Sag der KI genau, was sie tun soll. Z.B. 'Handle als Historiker (Rolle). Fasse den 2. Weltkrieg (Aufgabe) in 3 kurzen Stichpunkten zusammen (Format).'", "Iteratives Arbeiten: Gib dich nicht mit der ersten Antwort zufrieden. Korrigiere die KI: 'Das war zu kompliziert, schreibe es einfacher.'"] },
+                    { title: "2. Kriterien für Qualität", text: "KI als Assistent, nicht als Ersatz.", items: ["Halluzinationen: KIs lügen manchmal sehr überzeugend. Überprüfe Fakten immer mit einer echten Suchmaschine!", "Stil: KI-Texte klingen oft seelenlos oder benutzen immer dieselben Phrasen ('Zusammenfassend lässt sich sagen...'). Schreibe den Text immer in deinem eigenen Stil um.", "Urheberrecht: Gib in der Schule immer an, wenn du eine KI zur Hilfe genutzt hast."] }
+                ],
+                missions: ["Schreibe einen schlechten Prompt (z.B. 'Erkläre Photosynthese').", "Schreibe den Prompt nach der Formel um: 'Erkläre Photosynthese für einen 10-Jährigen in 3 Sätzen'.", "Vergleiche die Ergebnisse: Warum ist der zweite Prompt besser?", "Bitte eine KI (falls erlaubt/verfügbar), dir eine Quelle/Buch für ein Thema zu nennen.", "Prüfe per Google, ob das von der KI genannte Buch überhaupt existiert."]
+            },
+            14: {
+                sections: [
+                    { title: "1. Technische Bedienung", text: "Das digitale Profil erstellen.", items: ["PDFs zusammenfügen: Lerne, wie man Anschreiben, Lebenslauf und Zeugnisse in eine einzige PDF-Datei mergt (z.B. mit Tools wie PDF24 oder Adobe).", "Dateigröße: Eine Bewerbung sollte nicht größer als 5 MB sein. Komprimiere Bilder im Dokument vorher.", "E-Mail-Etikette: Betreffzeilen müssen aussagekräftig sein (z.B. 'Bewerbung als Praktikant - Max Mustermann')."] },
+                    { title: "2. Kriterien für Qualität", text: "Der erste Eindruck zählt.", items: ["Seriöse E-Mail: Nutze für Bewerbungen keine Adressen wie 'unicorn-fan2010@web.de'. Erstelle eine seriöse Adresse (vorname.nachname@...).", "LinkedIn/Xing: Ein sauberes Profil mit professionellem Foto wirkt Wunder. Partybilder gehören hier nicht hin.", "Fehlerfreiheit: Lass dein Anschreiben IMMER von zwei anderen Personen auf Rechtschreibung gegenlesen."] }
+                ],
+                missions: ["Erstelle testweise eine PDF-Datei aus einem leeren Word-Dokument.", "Recherchiere online ein kostenloses Tool zum 'PDF zusammenfügen' (Merge PDF).", "Schreibe einen seriösen E-Mail-Betreff für eine Bewerbung als Praktikant im Krankenhaus.", "Prüfe deine aktuelle E-Mail-Adresse: Ist sie seriös genug für eine Bewerbung?", "Überprüfe deine Social-Media-Profile: Gibt es dort öffentliche Bilder, die ein Chef nicht sehen sollte?"]
+            },
+            15: {
+                sections: [
+                    { title: "1. Technische Bedienung", text: "Kollaboration im Team.", items: ["Cloud-Dokumente: Nutze Office 365, um mit mehreren Leuten gleichzeitig im selben Word/PowerPoint-Dokument zu schreiben.", "Kanban-Boards: Nutze Tools wie Trello oder Microsoft Planner. Organisiere Aufgaben in Spalten: 'Zu tun', 'In Arbeit', 'Erledigt'.", "Versionierung: Wenn ihr Dateien hin- und herschickt, nennt sie 'Referat_v1', 'Referat_v2', niemals 'Referat_fertig_wirklich_final'."] },
+                    { title: "2. Kriterien für Qualität", text: "Warum Projekte scheitern (und wie nicht).", items: ["Klare Verantwortlichkeiten: Jede Aufgabe im Board braucht genau eine Person, die dafür zuständig ist.", "Deadlines: Aufgaben ohne konkretes Datum werden meistens zu spät erledigt.", "Kommunikation: Lieber einmal zu viel im Gruppenchat nachfragen als am Ende doppelte Arbeit zu haben."] }
+                ],
+                missions: ["Lege auf einem Blatt Papier ein kleines Kanban-Board an (3 Spalten: To Do, Doing, Done).", "Schreibe 3 Aufgaben für dein nächstes Schulprojekt auf Post-its und klebe sie in 'To Do'.", "Verschiebe ein Post-it in 'Doing', um den Workflow zu simulieren.", "Finde heraus, wie man ein Dokument in Office 365 für einen Mitschüler 'freigibt' (Teilen-Button).", "Diskutiert in der Gruppe: Warum ist 'Referat_final_fertig_v3' ein schlechter Dateiname?"]
+            },
+            23: {
+                sections: [
+                    { title: "1. Technische Bedienung", text: "Wie das Web funktioniert.", items: ["HTML & CSS: HTML ist das Gerüst (Texte, Bilder) einer Webseite, CSS ist die Farbe und das Design.", "Baukästen: Systeme wie WordPress oder Jimdo helfen dir, Webseiten per Drag & Drop zu bauen, ohne programmieren zu müssen.", "Responsive: Webseiten müssen sich automatisch anpassen, je nachdem, ob man sie auf dem Handy oder dem großen Monitor ansieht."] },
+                    { title: "2. Kriterien für Qualität", text: "User Experience (UX).", items: ["Mobile First: Da 80% der Leute Webseiten auf dem Handy ansehen, muss das Design auf kleinen Bildschirmen perfekt sein.", "Ladezeiten: Riesige Bilder machen die Seite langsam. User brechen ab, wenn eine Seite länger als 3 Sekunden lädt.", "Klarheit (Call to Action): Der Besucher muss sofort wissen, worum es geht und wo er klicken soll."] }
+                ],
+                missions: ["Gehe auf deine Lieblingswebseite und drücke am PC 'F12' (Entwicklertools).", "Schau dir den unverständlichen Code an – das ist HTML! Schließe das Fenster wieder.", "Öffne die Schul-Homepage auf dem Handy und am PC. Vergleiche, wie sich das Menü anpasst (Responsive Design).", "Skizziere auf einem Zettel eine Homepage für ein fiktives Startup.", "Achte bei deiner Skizze darauf, dass der wichtigste Button ('Kaufen' / 'Kontakt') sofort ins Auge fällt."]
+            },
+            // KLASSE 9-10 (REFLEXION)
+            16: {
+                sections: [
+                    { title: "Bias (Vorurteile) in Algorithmen", text: "KIs sind nicht neutral.", items: ["Künstliche Intelligenz lernt aus alten Daten von Menschen. Wenn diese Daten rassistisch oder sexistisch waren, übernimmt die KI diese Vorurteile.", "Beispiel: Ein Bewerbungs-Algorithmus hat mal Frauen systematisch benachteiligt, weil er aus alten Daten gelernt hat, dass Führungskräfte meistens männlich sind."] },
+                    { title: "Deepfakes & Wahrheit", text: "Der Angriff auf unsere Wahrnehmung.", items: ["KI kann täuschend echte Videos und Stimmen von Politikern oder Prominenten erzeugen (Deepfakes), die Dinge sagen, die sie nie gesagt haben.", "Folge: Das Vertrauen in digitale Medien sinkt extrem. Du musst lernen, kritischer denn je zu hinterfragen, was ein 'Beweisvideo' wert ist."] }
+                ],
+                missions: ["Recherchiere den Begriff 'Deepfake' und finde ein prominentes Beispiel.", "Diskutiere: Welche Gefahr stellen Deepfakes für Wahlen oder die Demokratie dar?", "Gib einer Bild-KI den Prompt 'Zeige einen typischen Chef'. Welches Geschlecht und Alter hat das Bild meistens?", "Was bedeutet der englische Begriff 'Bias' in der Informatik?", "Überlege: Wem gehören eigentlich die Rechte an einem Bild, das eine KI gemalt hat?"]
+            },
+            17: {
+                sections: [
+                    { title: "Hate Speech", text: "Worte als Waffe.", items: ["Hassrede im Netz (Rassismus, Sexismus, Drohungen) ist keine 'freie Meinungsäußerung', sondern oft eine Straftat.", "Der Echo-Kammer-Effekt: In extremen Gruppen schaukeln sich Menschen gegenseitig hoch, die Hemmschwelle sinkt drastisch."] },
+                    { title: "Zivilcourage zeigen", text: "Counter Speech (Gegenrede).", items: ["Schweigen ist oft Zustimmung. Es ist wichtig, sachlich gegenzuhalten ('Counter Speech'), um Mitlesern zu zeigen, dass Hass nicht normal ist.", "Melden & Blockieren: Nutze die Melde-Funktionen der Netzwerke aktiv, um strafbare Inhalte entfernen zu lassen. Bei schweren Drohungen: Polizei (Internetwache) einschalten!"] }
+                ],
+                missions: ["Finde auf Instagram/TikTok heraus, wo genau sich der 'Beitrag melden'-Button versteckt.", "Recherchiere: Welche Strafen stehen in Deutschland auf schwere Beleidigung oder Volksverhetzung im Netz?", "Überlege dir eine sachliche, nicht-aggressive Antwort (Counter Speech) auf einen fiktiven Hasskommentar.", "Was ist die 'Internetwache' der Polizei und wofür wird sie genutzt?", "Diskutiert: Ab wann ist ein Kommentar keine freie Meinung mehr, sondern Hassrede?"]
+            },
+            18: {
+                sections: [
+                    { title: "Dein Profil im Netz", text: "Das Internet als dein Lebenslauf.", items: ["Jeder Klick, jedes Foto, jeder dumme Kommentar aus deiner Jugendzeit hinterlässt einen digitalen Fußabdruck.", "Arbeitgeber scannen (googlen) Bewerber oft vor dem Vorstellungsgespräch. Ein peinliches Party-Foto von vor 4 Jahren kann dich den Traumjob kosten."] },
+                    { title: "Digitale Hygiene", text: "Aufräumen im Netz.", items: ["Ego-Googling: Suche regelmäßig deinen eigenen Namen (in Anführungszeichen) in Google und checke auch die Bildersuche.", "Löschen lassen: Wenn andere peinliche Fotos von dir gepostet haben, fordere sie auf, diese zu löschen (Recht am eigenen Bild)."] }
+                ],
+                missions: ["Setze deinen Vor- und Nachnamen in Anführungszeichen und suche dich selbst bei Google.", "Klicke dabei auch auf die Google-Bildersuche. Bist du mit den Ergebnissen zufrieden?", "Prüfe die Privatsphäre-Einstellungen deines ältesten Social-Media-Accounts.", "Finde heraus, wie man bei Google beantragt, dass ein bestimmtes Suchergebnis gelöscht wird.", "Lösche heute einen alten, peinlichen Beitrag oder ein Foto von dir im Netz."]
+            },
+            24: {
+                sections: [
+                    { title: "Daten sind das neue Öl", text: "Das Geschäftsmodell der Tech-Giganten.", items: ["Meta (Instagram, WhatsApp) und Google sind keine sozialen Dienste, sondern die größten Werbeagenturen der Welt. Ihr Produkt bist DU.", "Big Data: Millionen von kleinsten Datenpunkten (wann du wo bist, was du likest, wie schnell du tippst) werden zu unfassbar präzisen Profilen zusammengefügt."] },
+                    { title: "Micro-Targeting", text: "Manipulation nach Maß.", items: ["Weil Plattformen dich besser kennen als deine Eltern, können sie dir Werbung (oder politische Nachrichten) zeigen, die exakt auf deine aktuellen Ängste oder Wünsche zugeschnitten sind.", "Dark Patterns: Webseiten nutzen fiese Design-Tricks (z.B. schwer auffindbare 'Abbrechen'-Buttons), um dir noch mehr Daten zu entlocken."] }
+                ],
+                missions: ["Gehe auf eine beliebige Webseite und suche nach einem 'Dark Pattern' (z.B. ein riesiger grüner Zustimmen-Button und ein winzig grauer Ablehnen-Button).", "Recherchiere den Skandal um 'Cambridge Analytica' (ca. 2018). Worum ging es?", "Schau in deinen Social-Media-Feed: Warum wird dir genau diese Werbung gerade angezeigt?", "Finde heraus, wo du bei Instagram/Google deine Werbepräferenzen (Interessen) einsehen kannst.", "Diskutiert: Ist es eigentlich schlimm, dass Firmen unsere Daten haben, wenn wir dafür kostenlose Apps bekommen?"]
+            }
         };
 
-        const RichModuleLayout = ({ stage, sections, missions }) => {
-            const theme = getTheme(stage);
+        // --- DER DYNAMISCHE WISSENSSPEICHER (Layout & Rendering) ---
+        const RenderWissensspeicher = ({ module }) => {
+            const data = MODULE_CONTENT_DATA[module.id];
+            
+            if (!data) {
+                return (
+                    <div className="text-center py-12 px-4">
+                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                            <Icon name="book-open" size={40} />
+                        </div>
+                        <h3 className="text-xl font-black text-slate-800 mb-2">Inhalte in Arbeit</h3>
+                        <p className="text-slate-500 text-sm max-w-sm mx-auto">Der Wissensspeicher für dieses Modul wird gerade erstellt.</p>
+                    </div>
+                );
+            }
+
+            // Theme basierend auf der Stufe festlegen
+            const theme = {
+                "5-6": {
+                    introTitle: "Modul geschafft!",
+                    introText: "Herzlichen Glückwunsch! Du hast dieses Modul gemeistert. Hier ist dein Spickzettel:",
+                    bgHeader: "bg-green-50 border-green-200", textHeader: "text-green-900", iconHeader: "text-green-600",
+                    missionBox: "bg-amber-50 border-amber-200", missionTitle: "text-amber-900", missionIconText: "text-amber-600",
+                    missionListBg: "bg-white border-amber-100", missionTitleText: "Deine Missionen 🚀"
+                },
+                "7-8": {
+                    introTitle: "Erfolgreich zertifiziert!",
+                    introText: "Sehr gut! Hier findest du die wichtigsten Fakten und Methoden im Überblick:",
+                    bgHeader: "bg-indigo-50 border-indigo-200", textHeader: "text-indigo-900", iconHeader: "text-indigo-600",
+                    missionBox: "bg-blue-50 border-blue-200", missionTitle: "text-blue-900", missionIconText: "text-blue-600",
+                    missionListBg: "bg-white border-blue-100", missionTitleText: "Praxis-Challenges ⚡"
+                },
+                "9-10": {
+                    introTitle: "Modul abgeschlossen",
+                    introText: "Relevantes Fachwissen und Best Practices für deinen weiteren Weg:",
+                    bgHeader: "bg-slate-100 border-slate-200", textHeader: "text-slate-800", iconHeader: "text-slate-600",
+                    missionBox: "bg-emerald-50 border-emerald-200", missionTitle: "text-emerald-900", missionIconText: "text-emerald-600",
+                    missionListBg: "bg-white border-emerald-100", missionTitleText: "Transfer-Aufgaben 🎯"
+                }
+            }[module.stage];
+
             return (
                 <div className="space-y-8 text-slate-700 leading-relaxed">
-                    {/* Intro */}
+                    {/* Intro Banner */}
                     <div className={`${theme.bgHeader} p-6 rounded-3xl border shadow-sm`}>
                         <h4 className={`font-black ${theme.textHeader} text-xl flex items-center gap-2 mb-2`}>
                             <Icon name="trophy" size={28} className={theme.iconHeader}/> {theme.introTitle}
@@ -126,30 +320,37 @@
                     </div>
 
                     {/* Content Sections */}
-                    <div className="space-y-10">
-                        {sections.map((sec, i) => (
-                            <div key={i} className="relative">
-                                <h4 className="font-black text-xl text-slate-800 mb-4 flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-red-50 text-[#BF0D3E] flex items-center justify-center shrink-0">
-                                        <Icon name={sec.icon} size={20}/>
-                                    </div>
-                                    {sec.title}
+                    <div className="space-y-8">
+                        {data.sections.map((sec, idx) => (
+                            <div key={idx} className="relative">
+                                <h4 className="font-black text-xl text-slate-800 mb-3 flex items-center gap-2">
+                                    <span className="text-[#BF0D3E]">{idx + 1}.</span> {sec.title}
                                 </h4>
-                                <div className="pl-14">
-                                    {sec.content}
-                                </div>
+                                <p className="text-sm mb-3 font-medium">{sec.text}</p>
+                                {sec.items && (
+                                    <ul className="list-none text-sm space-y-3">
+                                        {sec.items.map((item, i) => (
+                                            <li key={i} className="flex gap-3 items-start bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${theme.missionIconText} bg-opacity-20`} style={{backgroundColor: 'currentColor', color: 'white'}}>
+                                                    <Icon name="check" size={14} />
+                                                </div>
+                                                <p dangerouslySetInnerHTML={{ __html: item.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/'(.*?)'/g, '<code class="bg-slate-200 text-slate-800 px-1 rounded font-bold">$1</code>') }} />
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
                             </div>
                         ))}
                     </div>
 
-                    {/* Missions */}
-                    {missions && missions.length > 0 && (
+                    {/* Missions Section */}
+                    {data.missions && data.missions.length > 0 && (
                         <div className={`${theme.missionBox} p-6 sm:p-8 rounded-[2rem] border shadow-sm mt-12 relative overflow-hidden`}>
                             <h4 className={`font-black ${theme.missionTitle} text-xl flex items-center gap-2 mb-6 relative z-10`}>
                                 <Icon name="flag" size={24} className={theme.missionIconText}/> {theme.missionTitleText}
                             </h4>
                             <ul className="space-y-3 relative z-10">
-                                {missions.map((mission, i) => (
+                                {data.missions.map((mission, i) => (
                                     <li key={i} className={`flex gap-4 ${theme.missionListBg} p-4 sm:p-5 rounded-2xl shadow-sm border items-start`}>
                                         <div className={`w-6 h-6 rounded-full flex items-center justify-center font-black text-xs shrink-0 ${theme.missionIconText} bg-opacity-20`} style={{backgroundColor: 'currentColor', color: 'white'}}>
                                             {i + 1}
@@ -164,238 +365,6 @@
             );
         };
 
-        // --- DYNAMISCHE INHALTE (RICH HTML) ---
-        const getModuleData = (moduleId, stage) => {
-            switch(moduleId) {
-                case 3: // Textverarbeitung (Word)
-                    return <RichModuleLayout stage={stage} 
-                        sections={[
-                            {
-                                title: "Der magische Lebensretter: Rückgängig", icon: "undo-2",
-                                content: (
-                                    <>
-                                        <p className="text-sm font-medium mb-3">Oh nein! Du hast aus Versehen deinen halben Text gelöscht oder ein Bild hat alles durcheinandergebracht? Keine Panik!</p>
-                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm mb-3">
-                                            <p className="flex items-center gap-2 mb-2"><Icon name="mouse-pointer-click" size={16} className="text-slate-400"/> Klicke ganz oben links in Word auf den <strong>gebogenen Pfeil nach links</strong>.</p>
-                                            <p className="flex items-center gap-2"><Icon name="keyboard" size={16} className="text-[#BF0D3E]"/> <strong>Der Profi-Trick:</strong> Drücke gleichzeitig <code className="bg-white text-[#BF0D3E] px-2 py-0.5 rounded shadow-sm font-bold border border-slate-200">Strg</code> + <code className="bg-white text-[#BF0D3E] px-2 py-0.5 rounded shadow-sm font-bold border border-slate-200">Z</code>.</p>
-                                        </div>
-                                    </>
-                                )
-                            },
-                            {
-                                title: "Ordnung schaffen mit Listen", icon: "list",
-                                content: (
-                                    <>
-                                        <p className="text-sm font-medium mb-3">Wenn du viele Informationen hast, benutze Listen! Das liest sich viel besser als ein riesiger Textblock.</p>
-                                        <ul className="text-sm space-y-2">
-                                            <li className="flex gap-2 items-start"><Icon name="check" size={16} className="text-green-500 mt-0.5 shrink-0"/> Markiere deinen Text und klicke oben auf die <strong>Aufzählungszeichen</strong> (Punkte) oder <strong>Nummerierung</strong> (1. 2. 3.).</li>
-                                            <li className="flex gap-2 items-start"><Icon name="info" size={16} className="text-blue-500 mt-0.5 shrink-0"/> <em>Tipp:</em> Wenn du am Ende eines Listenpunktes "Enter" drückst, macht Word automatisch den nächsten Punkt für dich!</li>
-                                        </ul>
-                                    </>
-                                )
-                            },
-                            {
-                                title: "Bilder einfügen (ohne Chaos!)", icon: "image",
-                                content: (
-                                    <>
-                                        <p className="text-sm font-medium mb-3">Oft zerreißt ein eingefügtes Bild deinen ganzen Text und lässt sich nicht richtig verschieben.</p>
-                                        <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 text-sm">
-                                            <p className="font-bold text-blue-900 mb-1">Die Lösung (Layoutoptionen):</p>
-                                            <p className="text-blue-800">Klicke das Bild an. Daneben erscheint ein kleines Symbol mit Linien. Klicke darauf und wähle <strong>"Quadrat"</strong>. Jetzt fließt dein Text wunderschön um das Bild herum!</p>
-                                        </div>
-                                    </>
-                                )
-                            },
-                            {
-                                title: "Das PDF-Geheimnis", icon: "file-check",
-                                content: (
-                                    <>
-                                        <p className="text-sm font-medium mb-3">Du schickst deine Hausaufgabe an den Lehrer, aber auf seinem PC ist alles verschoben? Speichere wichtige Dokumente immer als PDF. Ein PDF ist wie ein digitales, unveränderliches Foto von deinem Text!</p>
-                                        <p className="text-sm"><Icon name="arrow-right" size={14} className="inline text-slate-400"/> <strong>Datei &rarr; Speichern unter &rarr; Dateityp: PDF</strong></p>
-                                    </>
-                                )
-                            }
-                        ]}
-                        missions={[
-                            "Tippe einen kurzen Satz über dein Lieblingstier und mache ein Wort fett.",
-                            "Formatiere eine Zeile als echte Überschrift (über das Menü 'Formatvorlagen', nicht nur größer/fett machen).",
-                            "Mache einen absichtlichen Fehler (lösche einen Satz) und nutze Strg+Z, um ihn zurückzuholen.",
-                            "Füge ein Bild ein und stelle die Layoutoptionen auf 'Quadrat', damit der Text herumfließt.",
-                            "Speichere dein Dokument abschließend als PDF-Datei ab."
-                        ]}
-                    />;
-
-                case 6: // Suchmaschinen
-                    return <RichModuleLayout stage={stage}
-                        sections={[
-                            {
-                                title: "Das Geheimnis der Suchmaschine", icon: "bot",
-                                content: (
-                                    <>
-                                        <p className="text-sm font-medium mb-3">Stell dir das Internet wie eine gigantische Bibliothek vor. Eine Suchmaschine durchsucht nicht "live" das Internet, wenn du auf Enter drückst!</p>
-                                        <ul className="text-sm space-y-3">
-                                            <li className="flex gap-3"><Icon name="spider" size={18} className="text-slate-500 shrink-0"/> <span><strong>Die Crawler (Spinnen):</strong> Unsichtbare Programme lesen Tag und Nacht Webseiten.</span></li>
-                                            <li className="flex gap-3"><Icon name="database" size={18} className="text-slate-500 shrink-0"/> <span><strong>Der Index:</strong> Sie speichern alle gefundenen Wörter in einem riesigen Inhaltsverzeichnis. Du suchst also nur in diesem Verzeichnis, deshalb geht es so schnell!</span></li>
-                                        </ul>
-                                    </>
-                                )
-                            },
-                            {
-                                title: "Die perfekten Suchbegriffe (Keywords)", icon: "target",
-                                content: (
-                                    <>
-                                        <p className="text-sm font-medium mb-3">Tippe niemals ganze Sätze oder Fragen in die Suchleiste ein!</p>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                                            <div className="bg-red-50 p-3 rounded-xl border border-red-100 text-sm">
-                                                <p className="font-bold text-red-800 mb-1 flex items-center gap-1"><Icon name="x-circle" size={16}/> Falsch</p>
-                                                <p className="text-red-700 italic">"Was fressen eigentlich Eisbären im kalten Winter?"</p>
-                                            </div>
-                                            <div className="bg-green-50 p-3 rounded-xl border border-green-100 text-sm">
-                                                <p className="font-bold text-green-800 mb-1 flex items-center gap-1"><Icon name="check-circle-2" size={16}/> Richtig</p>
-                                                <p className="text-green-700 font-mono">Eisbär Nahrung Winter</p>
-                                            </div>
-                                        </div>
-                                    </>
-                                )
-                            },
-                            {
-                                title: "Die Profi-Tricks (Suchoperatoren)", icon: "wand-2",
-                                content: (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div className="bg-white border-2 border-slate-100 p-4 rounded-xl">
-                                            <p className="font-black text-lg text-[#BF0D3E] mb-1">Minus (-)</p>
-                                            <p className="text-xs text-slate-500 mb-2">Schließt unerwünschte Wörter komplett aus.</p>
-                                            <code className="text-xs font-bold bg-slate-100 px-2 py-1 rounded">Jaguar -Auto</code>
-                                        </div>
-                                        <div className="bg-white border-2 border-slate-100 p-4 rounded-xl">
-                                            <p className="font-black text-lg text-[#BF0D3E] mb-1">Gänsefüßchen (" ")</p>
-                                            <p className="text-xs text-slate-500 mb-2">Sucht nach exakt dieser genauen Wortfolge.</p>
-                                            <code className="text-xs font-bold bg-slate-100 px-2 py-1 rounded">"Gymnasium Thomaeum"</code>
-                                        </div>
-                                    </div>
-                                )
-                            },
-                            {
-                                title: "Augen auf bei der Trefferliste!", icon: "eye",
-                                content: (
-                                    <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 text-sm">
-                                        <p className="font-bold text-amber-900 mb-2">Der erste Treffer ist nicht immer der beste!</p>
-                                        <p className="text-amber-800 mb-2">Achte auf das kleine Wort <strong>"Anzeige"</strong> oder <strong>"Gesponsert"</strong>. Firmen bezahlen Geld, um ganz oben zu stehen. Überspringe diese Links lieber.</p>
-                                        <p className="text-amber-800">Lies immer den kurzen Vorschautext (Snippet) unter dem Link, um zu prüfen, ob die Seite deine Frage wirklich beantwortet.</p>
-                                    </div>
-                                )
-                            }
-                        ]}
-                        missions={[
-                            "Finde heraus, an welchem Wochentag Albert Einstein geboren wurde (Nutze kluge Keywords!).",
-                            "Nutze den Minus-Trick: Suche nach dem Tier Jaguar, ohne dass Bilder von Autos auftauchen.",
-                            "Suche nach 'Apple' und zähle, wie viele der ersten Treffer als bezahlte 'Anzeige' markiert sind.",
-                            "Finde heraus, wie man bei Google nur nach Ergebnissen sucht, die von heute stammen (Filter nutzen).",
-                            "Öffne die Suchmaschine 'Blinde-Kuh.de' und überlege, für wen sie besonders gut geeignet ist."
-                        ]}
-                    />;
-
-                case 4: // Netiquette
-                    return <RichModuleLayout stage={stage}
-                        sections={[
-                            {
-                                title: "Der Mensch am anderen Ende", icon: "heart",
-                                content: (
-                                    <>
-                                        <p className="text-sm font-medium mb-3">Vergiss nie: Hinter jedem Profilbild und Chatnamen steckt ein echter Mensch mit echten Gefühlen!</p>
-                                        <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 text-sm">
-                                            <p className="font-bold text-indigo-900 mb-1">Die goldene Regel:</p>
-                                            <p className="text-indigo-800">Schreibe im Internet niemals etwas, das du der Person nicht auch mutig direkt ins Gesicht sagen würdest.</p>
-                                        </div>
-                                    </>
-                                )
-                            },
-                            {
-                                title: "BITTE NICHT SCHREIEN!", icon: "volume-x",
-                                content: (
-                                    <>
-                                        <p className="text-sm font-medium mb-3">Wusstest du, dass Großbuchstaben im Internet eine besondere Bedeutung haben?</p>
-                                        <p className="text-sm text-slate-600 bg-slate-100 p-3 rounded-xl font-medium">Wenn du <code className="bg-white text-slate-800 px-2 py-0.5 rounded shadow-sm font-bold border border-slate-200">ALLES GROSS SCHREIBST</code>, bedeutet das in der Chat-Sprache, dass du brüllst. Nutze das nur, wenn du wirklich Begeisterung ausdrücken willst!</p>
-                                    </>
-                                )
-                            },
-                            {
-                                title: "Achtung bei Witzen und Ironie", icon: "smile",
-                                content: (
-                                    <p className="text-sm font-medium">Im Chat kann man dein Lachen nicht hören und dein Gesicht nicht sehen. Witze werden deshalb oft falsch verstanden und wirken auf andere plötzlich fies. <strong>Die Lösung:</strong> Nutze passende Emojis (😂, 😜), um zu zeigen, wie ein Satz gemeint ist. Aber übertreibe es nicht!</p>
-                                )
-                            },
-                            {
-                                title: "Erst denken, dann posten", icon: "brain",
-                                content: (
-                                    <p className="text-sm font-medium">Das Internet vergisst nicht. Auch wenn du eine Nachricht bei WhatsApp "für alle löschst": Jemand könnte in der Zwischenzeit schon einen Screenshot davon gemacht haben. Bevor du wütend etwas abschickst, lege das Handy kurz weg und atme durch.</p>
-                                )
-                            }
-                        ]}
-                        missions={[
-                            "Lies dir deine letzten drei Nachrichten in einem Klassenchat durch. Waren sie höflich?",
-                            "Schreibe einen Satz komplett in GROSSBUCHSTABEN und vergleiche ihn mit der normalen Version. Spürst du den Unterschied?",
-                            "Finde ein passendes Emoji, das den Satz 'Das war ja wieder super' ironisch (als Witz) wirken lässt.",
-                            "Überlege dir eine feste Regel für euren Klassenchat, die Streit vermeiden soll.",
-                            "Diskutiert: Warum können Sprachnachrichten bei Streit manchmal besser sein als geschriebener Text?"
-                        ]}
-                    />;
-                
-                case 7: // Präsentationsprofi
-                    return <RichModuleLayout stage={stage}
-                        sections={[
-                            {
-                                title: "Weniger ist mehr (Text)", icon: "align-left",
-                                content: (
-                                    <>
-                                        <p className="text-sm font-medium mb-3">Die schlimmste Folie ist die, die komplett mit Text vollgeschrieben ist.</p>
-                                        <ul className="text-sm space-y-2">
-                                            <li className="flex gap-2 items-start"><Icon name="check" size={16} className="text-green-500 mt-0.5 shrink-0"/> Nutze <strong>nur kurze Stichpunkte</strong>.</li>
-                                            <li className="flex gap-2 items-start"><Icon name="check" size={16} className="text-green-500 mt-0.5 shrink-0"/> Regel: Maximal 5 Punkte pro Folie, maximal 5 Wörter pro Punkt!</li>
-                                        </ul>
-                                    </>
-                                )
-                            },
-                            {
-                                title: "Große Bilder wirken", icon: "image-plus",
-                                content: (
-                                    <p className="text-sm font-medium">Ein starkes Bild auf der Folie ist besser als zehn Zeilen Text. Die Folie soll das unterstützen, was du sagst, nicht deinen Text ersetzen. Das Publikum soll dir zuhören und nicht lesen müssen.</p>
-                                )
-                            },
-                            {
-                                title: "Frei sprechen", icon: "mic",
-                                content: (
-                                    <div className="bg-red-50 p-4 rounded-2xl border border-red-100 text-sm">
-                                        <p className="font-bold text-red-900 mb-1">Du bist der Star des Vortrags!</p>
-                                        <p className="text-red-800">Lies niemals einfach den Text von der Folie ab. Schreibe dir die ganzen Sätze auf Karteikarten und sprich frei zum Publikum.</p>
-                                    </div>
-                                )
-                            }
-                        ]}
-                        missions={[
-                            "Erstelle in PowerPoint/Keynote eine Titelfolie mit deinem Namen und einem starken Bild.",
-                            "Erstelle eine zweite Folie und schreibe exakt 3 extrem kurze Stichpunkte auf.",
-                            "Nutze den eingebauten 'Designer' (oder 'Design-Ideen'), um das Layout automatisch hübsch machen zu lassen.",
-                            "Starte den Präsentationsmodus (Vollbild) und übe, die Folien per Pfeiltaste weiterzuklicken.",
-                            "Versuche, eine Minute lang etwas zu deiner Folie zu erklären, ohne einen Text abzulesen."
-                        ]}
-                    />;
-
-                default: // Fallback für Module, die noch keinen detaillierten Text haben
-                    return (
-                        <div className="text-center py-16 px-6">
-                            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100">
-                                <Icon name="book-open" size={48} className="text-slate-300" />
-                            </div>
-                            <h3 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">Wissensspeicher in Arbeit</h3>
-                            <p className="text-slate-500 text-base max-w-md mx-auto font-medium leading-relaxed">
-                                Der detaillierte Inhalt, die Layouts und die Praxis-Missionen für dieses Modul werden aktuell von den Lehrkräften erstellt. Schau bald wieder vorbei!
-                            </p>
-                        </div>
-                    );
-            }
-        };
-
 
         // --- HAUPT-APP ---
         const App = () => {
@@ -406,6 +375,7 @@
             const [errorMsg, setErrorMsg] = useState("");
             const [activeStage, setActiveStage] = useState("5-6");
             
+            // Zustand für das offene Modul (Modal)
             const [selectedModule, setSelectedModule] = useState(null);
 
             useEffect(() => {
@@ -566,7 +536,7 @@
 
                                 {/* Modal Body (Scrollable) */}
                                 <div className="p-6 sm:p-10 overflow-y-auto bg-white">
-                                    {getModuleData(selectedModule.id, selectedModule.stage)}
+                                    <RenderWissensspeicher module={selectedModule} />
                                 </div>
                             </div>
                         </div>
