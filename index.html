@@ -49,13 +49,43 @@
         const msalInstance = new msal.PublicClientApplication(msalConfig);
         const msalInitPromise = msalInstance.initialize();
 
+        // --- AKTUALISIERTE MODULE (4 PRO KATEGORIE & STUFE) ---
         const ALL_MODULES = [
-            { id: 1, title: "Hardware-Führerschein", stage: "5-6", category: "skills" }, { id: 2, title: "Dateimanagement", stage: "5-6", category: "skills" }, { id: 3, title: "Umgang mit Word", stage: "5-6", category: "skills" },
-            { id: 4, title: "Netiquette", stage: "5-6", category: "reflexion" }, { id: 5, title: "Prävention", stage: "5-6", category: "reflexion" }, { id: 6, title: "Suchmaschinen", stage: "5-6", category: "reflexion" },
-            { id: 7, title: "Präsentationsprofi", stage: "7-8", category: "skills" }, { id: 8, title: "Medienproduktion", stage: "7-8", category: "skills" }, { id: 9, title: "Tabellenkalkulation", stage: "7-8", category: "skills" },
-            { id: 10, title: "Urheberrecht", stage: "7-8", category: "reflexion" }, { id: 11, title: "Quellenkritik", stage: "7-8", category: "reflexion" }, { id: 12, title: "Datenschutz", stage: "7-8", category: "reflexion" },
-            { id: 13, title: "KI-Produktivität", stage: "9-10", category: "skills" }, { id: 14, title: "Digitale Bewerbung", stage: "9-10", category: "skills" }, { id: 15, title: "Projektmanagement", stage: "9-10", category: "skills" },
-            { id: 16, title: "KI-Ethik", stage: "9-10", category: "reflexion" }, { id: 17, title: "Zivilcourage", stage: "9-10", category: "reflexion" }, { id: 18, title: "Digitaler Fußabdruck", stage: "9-10", category: "reflexion" }
+            // Klasse 5-6: Skills (4 Module)
+            { id: 1, title: "Hardware-Führerschein", stage: "5-6", category: "skills" }, 
+            { id: 2, title: "Dateimanagement", stage: "5-6", category: "skills" }, 
+            { id: 3, title: "Umgang mit Word", stage: "5-6", category: "skills" },
+            { id: 7, title: "Präsentationsprofi", stage: "5-6", category: "skills" }, // Verschoben aus 7-8
+
+            // Klasse 5-6: Reflexion (4 Module)
+            { id: 4, title: "Netiquette", stage: "5-6", category: "reflexion" }, 
+            { id: 5, title: "Prävention", stage: "5-6", category: "reflexion" }, 
+            { id: 6, title: "Suchmaschinen", stage: "5-6", category: "reflexion" },
+            { id: 19, title: "Sichere Passwörter", stage: "5-6", category: "reflexion" },
+
+            // Klasse 7-8: Skills (4 Module)
+            { id: 8, title: "Medienproduktion", stage: "7-8", category: "skills" }, 
+            { id: 9, title: "Tabellenkalkulation", stage: "7-8", category: "skills" },
+            { id: 20, title: "Bildbearbeitung", stage: "7-8", category: "skills" },
+            { id: 21, title: "Audio & Podcasts", stage: "7-8", category: "skills" },
+
+            // Klasse 7-8: Reflexion (4 Module)
+            { id: 10, title: "Urheberrecht", stage: "7-8", category: "reflexion" }, 
+            { id: 11, title: "Quellenkritik", stage: "7-8", category: "reflexion" }, 
+            { id: 12, title: "Datenschutz", stage: "7-8", category: "reflexion" },
+            { id: 22, title: "Social Media Check", stage: "7-8", category: "reflexion" },
+
+            // Klasse 9-10: Skills (4 Module)
+            { id: 13, title: "KI-Produktivität", stage: "9-10", category: "skills" }, 
+            { id: 14, title: "Digitale Bewerbung", stage: "9-10", category: "skills" }, 
+            { id: 15, title: "Projektmanagement", stage: "9-10", category: "skills" },
+            { id: 23, title: "Webdesign Basics", stage: "9-10", category: "skills" },
+
+            // Klasse 9-10: Reflexion (4 Module)
+            { id: 16, title: "KI-Ethik", stage: "9-10", category: "reflexion" }, 
+            { id: 17, title: "Zivilcourage", stage: "9-10", category: "reflexion" }, 
+            { id: 18, title: "Digitaler Fußabdruck", stage: "9-10", category: "reflexion" },
+            { id: 24, title: "Datenökonomie", stage: "9-10", category: "reflexion" }
         ];
 
         const Icon = ({ name, size = 20, className = "" }) => {
@@ -162,7 +192,7 @@
                             <ul className="list-none text-sm space-y-3">
                                 <li className="flex gap-3 items-start">
                                     <div className="mt-1 w-2 h-2 rounded-full bg-[#BF0D3E] shrink-0"></div>
-                                    <p><strong>Die Spinnen (Crawler/Spider):</strong> Kleine, unsichtbare Programme der Suchmaschinen krabbeln Tag und Nacht durchs Internet. Sie lesen Webseiten, folgen Links und sammeln alle Wörter, die sie finden.</p>
+                                    <p><strong>Die Spinnen (Crawler/Spider):</strong> Kleine, unsichtbare Programme der Suchmaschinen kr krabbeln Tag und Nacht durchs Internet. Sie lesen Webseiten, folgen Links und sammeln alle Wörter, die sie finden.</p>
                                 </li>
                                 <li className="flex gap-3 items-start">
                                     <div className="mt-1 w-2 h-2 rounded-full bg-[#BF0D3E] shrink-0"></div>
@@ -502,7 +532,8 @@
             }
 
             const totalCompleted = studentData ? studentData.completedTasks.length : 0;
-            const progressPercent = Math.round((totalCompleted / 18) * 100);
+            // Fortschritt dynamisch anhand aller verfügbaren Module berechnen
+            const progressPercent = Math.round((totalCompleted / ALL_MODULES.length) * 100) || 0;
 
             return (
                 <div className="min-h-screen flex flex-col bg-slate-50 font-sans pb-10 relative">
@@ -556,7 +587,7 @@
                                 <div className="absolute top-0 bottom-0 left-[33.33%] w-1 bg-black/20"></div>
                                 <div className="absolute top-0 bottom-0 left-[66.66%] w-1 bg-black/20"></div>
                             </div>
-                            <p className="text-right mt-2 text-[10px] font-bold text-red-200 uppercase">{totalCompleted} von 18 Modulen geschafft</p>
+                            <p className="text-right mt-2 text-[10px] font-bold text-red-200 uppercase">{totalCompleted} von {ALL_MODULES.length} Modulen geschafft</p>
                         </div>
                     </header>
 
@@ -581,7 +612,7 @@
                             <h3 className="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
                                 <Icon name="wrench" size={24} className="text-[#BF0D3E]" /> Skills (Anwendung)
                             </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                                 {ALL_MODULES.filter(m => m.stage === activeStage && m.category === 'skills').map(modul => {
                                     const isDone = studentData?.completedTasks.includes(modul.id);
                                     const moduleData = studentData?.moduleDates[modul.id];
@@ -647,7 +678,7 @@
                             <h3 className="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
                                 <Icon name="brain" size={24} className="text-[#BF0D3E]" /> Reflexion (Umgang)
                             </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                                 {ALL_MODULES.filter(m => m.stage === activeStage && m.category === 'reflexion').map(modul => {
                                     const isDone = studentData?.completedTasks.includes(modul.id);
                                     const moduleData = studentData?.moduleDates[modul.id];
