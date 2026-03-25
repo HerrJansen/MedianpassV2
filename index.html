@@ -3,38 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mein Medienpass | Gymnasium Thomaeum</title>
-    
+    <title>Lehrer-Konsole | Gymnasium Thomaeum</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script type="text/javascript" src="https://alcdn.msauth.net/browser/2.32.2/js/msal-browser.min.js"></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         :root { --thomaeum-red: #BF0D3E; }
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
-        .spinner { border: 3px solid rgba(0,0,0,0.1); border-left-color: var(--thomaeum-red); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .spinner { border: 3px solid rgba(0,0,0,0.1); border-left-color: var(--thomaeum-red); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
     <div id="root"></div>
-
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useMemo } = React;
 
         // --- KONFIGURATION ---
         const MS_CONFIG = {
             tenantId: "09c4bd58-1b8c-410d-930e-816015e61028",
             clientId: "7d277b19-93c1-4df7-8f1b-d38749b3d440",
             siteId: "thomaeumde.sharepoint.com,9ef17c4d-b57b-482e-9168-3cc3bc43bc3d,d600d53b-cfd0-45f7-96a5-f1ac20222f8f",
-            listId: "08da02d9-5b67-4938-9d7e-9e9dee97fa2e"
+            listId: "08da02d9-5b67-4938-9d7e-9e9dee97fa2e",
+            teacherGroupId: "2bbe9733-7137-4d54-a788-e988c3d56cd9" // Entra ID Gruppe für Lehrer
         };
-        const THOMA_RED = "#BF0D3E";
 
         const msalConfig = {
             auth: {
@@ -45,11 +42,37 @@
             },
             cache: { cacheLocation: "localStorage", storeAuthStateInCookie: true }
         };
-        
         const msalInstance = new msal.PublicClientApplication(msalConfig);
         const msalInitPromise = msalInstance.initialize();
 
-        // --- HILFS-KOMPONENTE FÜR ICONS ---
+        // --- NEUE 24 MODULE FÜR DIE LEHRER-APP ---
+        const ALL_MODULES = [
+            { id: 1, title: "Hardware-Führerschein", stage: "5-6", category: "skills", icon: "monitor" },
+            { id: 2, title: "Dateimanagement", stage: "5-6", category: "skills", icon: "folder" },
+            { id: 3, title: "Umgang mit Word", stage: "5-6", category: "skills", icon: "file-text" },
+            { id: 7, title: "Präsentationsprofi", stage: "5-6", category: "skills", icon: "presentation" },
+            { id: 4, title: "Netiquette", stage: "5-6", category: "reflexion", icon: "message-square" },
+            { id: 5, title: "Prävention", stage: "5-6", category: "reflexion", icon: "shield-alert" },
+            { id: 6, title: "Suchmaschinen", stage: "5-6", category: "reflexion", icon: "search" },
+            { id: 19, title: "Sichere Passwörter", stage: "5-6", category: "reflexion", icon: "key" },
+            { id: 8, title: "Medienproduktion", stage: "7-8", category: "skills", icon: "video" },
+            { id: 9, title: "Tabellenkalkulation", stage: "7-8", category: "skills", icon: "table" },
+            { id: 20, title: "Bildbearbeitung", stage: "7-8", category: "skills", icon: "image" },
+            { id: 21, title: "Audio & Podcasts", stage: "7-8", category: "skills", icon: "mic" },
+            { id: 10, title: "Urheberrecht", stage: "7-8", category: "reflexion", icon: "copyright" },
+            { id: 11, title: "Quellenkritik", stage: "7-8", category: "reflexion", icon: "check-circle" },
+            { id: 12, title: "Datenschutz", stage: "7-8", category: "reflexion", icon: "lock" },
+            { id: 22, title: "Social Media Check", stage: "7-8", category: "reflexion", icon: "smartphone" },
+            { id: 13, title: "KI-Produktivität", stage: "9-10", category: "skills", icon: "cpu" },
+            { id: 14, title: "Digitale Bewerbung", stage: "9-10", category: "skills", icon: "briefcase" },
+            { id: 15, title: "Projektmanagement", stage: "9-10", category: "skills", icon: "kanban" },
+            { id: 23, title: "Webdesign Basics", stage: "9-10", category: "skills", icon: "globe" },
+            { id: 16, title: "KI-Ethik", stage: "9-10", category: "reflexion", icon: "scale" },
+            { id: 17, title: "Zivilcourage", stage: "9-10", category: "reflexion", icon: "users" },
+            { id: 18, title: "Digitaler Fußabdruck", stage: "9-10", category: "reflexion", icon: "footprint" },
+            { id: 24, title: "Datenökonomie", stage: "9-10", category: "reflexion", icon: "database" }
+        ];
+
         const Icon = ({ name, size = 20, className = "" }) => {
             const [svg, setSvg] = useState("");
             useEffect(() => {
@@ -60,338 +83,20 @@
             return <span className={`inline-flex items-center justify-center ${className}`} dangerouslySetInnerHTML={{ __html: svg }} />;
         };
 
-        // --- MODULE BASIS-DATEN ---
-        const ALL_MODULES = [
-            { id: 1, title: "Hardware-Führerschein", stage: "5-6", category: "skills", icon: "monitor" }, 
-            { id: 2, title: "Dateimanagement", stage: "5-6", category: "skills", icon: "folder" }, 
-            { id: 3, title: "Umgang mit Word", stage: "5-6", category: "skills", icon: "file-text" },
-            { id: 7, title: "Präsentationsprofi", stage: "5-6", category: "skills", icon: "presentation" },
-            { id: 4, title: "Netiquette", stage: "5-6", category: "reflexion", icon: "message-square" }, 
-            { id: 5, title: "Prävention", stage: "5-6", category: "reflexion", icon: "shield-alert" }, 
-            { id: 6, title: "Suchmaschinen", stage: "5-6", category: "reflexion", icon: "search" },
-            { id: 19, title: "Sichere Passwörter", stage: "5-6", category: "reflexion", icon: "key" },
-            { id: 8, title: "Medienproduktion", stage: "7-8", category: "skills", icon: "video" }, 
-            { id: 9, title: "Tabellenkalkulation", stage: "7-8", category: "skills", icon: "table" },
-            { id: 20, title: "Bildbearbeitung", stage: "7-8", category: "skills", icon: "image" },
-            { id: 21, title: "Audio & Podcasts", stage: "7-8", category: "skills", icon: "mic" },
-            { id: 10, title: "Urheberrecht", stage: "7-8", category: "reflexion", icon: "copyright" }, 
-            { id: 11, title: "Quellenkritik", stage: "7-8", category: "reflexion", icon: "check-circle" }, 
-            { id: 12, title: "Datenschutz", stage: "7-8", category: "reflexion", icon: "lock" },
-            { id: 22, title: "Social Media Check", stage: "7-8", category: "reflexion", icon: "smartphone" },
-            { id: 13, title: "KI-Produktivität", stage: "9-10", category: "skills", icon: "cpu" }, 
-            { id: 14, title: "Digitale Bewerbung", stage: "9-10", category: "skills", icon: "briefcase" }, 
-            { id: 15, title: "Projektmanagement", stage: "9-10", category: "skills", icon: "kanban" },
-            { id: 23, title: "Webdesign Basics", stage: "9-10", category: "skills", icon: "globe" },
-            { id: 16, title: "KI-Ethik", stage: "9-10", category: "reflexion", icon: "scale" }, 
-            { id: 17, title: "Zivilcourage", stage: "9-10", category: "reflexion", icon: "users" }, 
-            { id: 18, title: "Digitaler Fußabdruck", stage: "9-10", category: "reflexion", icon: "footprint" },
-            { id: 24, title: "Datenökonomie", stage: "9-10", category: "reflexion", icon: "database" }
-        ];
-
-        // --- ZENTRALE DATENBANK FÜR INHALTE & MISSIONEN ---
-        const MODULE_CONTENT_DATA = {
-            // KLASSE 5-6 (SKILLS)
-            1: {
-                sections: [
-                    { title: "1. Technische Bedienung", text: "Computer, Tablet & Co. sicher steuern.", items: ["Maus: Linksklick zum Auswählen, Rechtsklick für Menüs (Optionen).", "Tastatur: Großschreibung mit der Shift-Taste (Pfeil nach oben).", "Kabel immer am Stecker ziehen, niemals am Kabel selbst reißen."] },
-                    { title: "2. Kriterien für Qualität", text: "Gesundheit und Pflege sind wichtig.", items: ["Ergonomie: Der Bildschirm sollte auf Augenhöhe sein, sitze gerade.", "Sauberkeit: Trinke nicht direkt über der Tastatur.", "Sicherheit: Sperre deinen Bildschirm (Windows-Taste + L), wenn du weggehst."] }
-                ],
-                missions: ["Mache einen Rechtsklick auf den Desktop und öffne ein neues Menü.", "Schreibe deinen Namen am PC einmal komplett in GROSSBUCHSTABEN.", "Sperre deinen Computer mit der Tastenkombination (Windows + L).", "Prüfe deine Sitzhaltung: Sind deine Augen auf Höhe des oberen Bildschirmrands?", "Zeige an deinem Tablet/PC, wo man die Bildschirmhelligkeit verstellt."]
-            },
-            2: {
-                sections: [
-                    { title: "1. Technische Bedienung", text: "Ordnung im digitalen Rucksack.", items: ["Neuen Ordner erstellen: Rechtsklick -> Neu -> Ordner.", "Dateien verschieben: Datei anklicken, Maustaste gedrückt halten und in den Ordner ziehen (Drag & Drop).", "Cloud: Speichere wichtige Schulsachen in deinem OneDrive, damit sie nicht verloren gehen."] },
-                    { title: "2. Kriterien für Qualität", text: "So findest du alles wieder.", items: ["Logische Namen: Nenne Dateien nicht 'asdf.docx', sondern '2026-Deutsch-Referat'.", "Struktur: Lege für jedes Schulfach einen eigenen Hauptordner an.", "Aufräumen: Lösche alte Dateien regelmäßig und leere den Papierkorb."] }
-                ],
-                missions: ["Erstelle auf dem Desktop einen Ordner namens 'Schule'.", "Erstelle in dem Ordner 'Schule' drei Unterordner für deine Lieblingsfächer.", "Benenne eine beliebige Datei auf deinem Gerät sinnvoll um.", "Verschiebe eine Datei in einen deiner neuen Ordner.", "Finde den digitalen 'Papierkorb' und leere ihn."]
-            },
-            3: {
-                sections: [
-                    { title: "1. Technische Bedienung", text: "Texte schreiben und gestalten.", items: ["Speichern: Drücke oft STRG + S, damit dein Text nicht verloren geht.", "Rückgängig: Ein Fehler passiert? Drücke STRG + Z.", "Formatvorlagen: Nutze für Überschriften die Formatvorlagen oben im Menü (Überschrift 1), mach sie nicht einfach nur fett."] },
-                    { title: "2. Kriterien für Qualität", text: "So wird dein Text gut lesbar.", items: ["Schriftart: Wähle ruhige Schriften (wie Arial oder Calibri) in Größe 11 oder 12.", "Absätze: Drücke nach einem Sinnabschnitt 'Enter' für eine Leerzeile. Das Auge braucht Pausen.", "PDF Export: Speichere fertige Hausaufgaben als PDF, damit sich bei deinem Lehrer nichts verschiebt."] }
-                ],
-                missions: ["Tippe einen kurzen Satz und mache ein Wort davon fett.", "Nutze die Formatvorlage 'Überschrift 1' für ein neues Wort.", "Markiere einen Text und kopiere ihn mit STRG+C und füge ihn mit STRG+V wieder ein.", "Mache einen Fehler und nutze STRG+Z, um ihn rückgängig zu machen.", "Speichere dein Dokument einmal als normales Word-Dokument und einmal als PDF."]
-            },
-            7: {
-                sections: [
-                    { title: "1. Technische Bedienung", text: "Folien bauen in PowerPoint/Keynote.", items: ["Neue Folie: Klicke auf 'Neue Folie' und wähle das passende Layout (z.B. 'Titel und Inhalt').", "Bilder einfügen: Gehe auf 'Einfügen' -> 'Bilder' und passe die Größe an den Ecken an.", "Design-Ideen: Nutze den automatischen 'Designer', um Folien schnell hübsch zu machen."] },
-                    { title: "2. Kriterien für Qualität", text: "Was eine Präsentation spannend macht.", items: ["Wenig Text: Auf Folien gehören nur Stichpunkte, keine ganzen Sätze!", "Große Bilder: Ein starkes Bild ist besser als 10 Zeilen Text.", "Frei sprechen: Die Folie ist nur deine Unterstützung, du bist der Star des Vortrags!"] }
-                ],
-                missions: ["Erstelle eine Titelfolie mit deinem Namen und dem Thema 'Mein Lieblingstier'.", "Füge eine zweite Folie hinzu und schreibe exakt 3 kurze Stichpunkte auf.", "Füge ein Bild deines Lieblingstiers ein und ziehe es groß.", "Teste den Präsentations-Modus (Vollbild) und klicke dich durch.", "Versuche, eine Minute über dein Tier zu sprechen, ohne den Text von der Folie abzulesen."]
-            },
-            // KLASSE 5-6 (REFLEXION)
-            4: {
-                sections: [
-                    { title: "Die goldene Regel", text: "Vergiss nie den Menschen am anderen Ende.", items: ["Schreibe im Chat nur Dinge, die du der Person auch direkt ins Gesicht sagen würdest.", "Ein rotes Tuch: ALLES IN GROSSBUCHSTABEN ZU SCHREIBEN bedeutet im Internet 'Schreien'. Lass das lieber!"] },
-                    { title: "Witze und Ironie", text: "Oft kommt es anders an, als du denkst.", items: ["Im Chat hört man dein Lachen nicht. Nutze Emojis (😂, 😜), damit ein Witz nicht als Beleidigung verstanden wird.", "Wenn dich etwas ärgert: Erst tief durchatmen, dann tippen. Das Internet vergisst nicht."] }
-                ],
-                missions: ["Schreibe eine sehr freundliche Nachricht an einen Klassenkameraden.", "Schreibe einen Satz in GROSSBUCHSTABEN und vergleiche, wie aggressiv er wirkt.", "Lies dir deine letzten 3 Nachrichten in einem Chat durch: Waren sie höflich?", "Finde ein passendes Emoji, das den Satz 'Das war ja super' ironisch (witzig) wirken lässt.", "Überlege dir eine Regel für euren Klassenchat und besprich sie mit deinem Sitznachbarn."]
-            },
-            5: {
-                sections: [
-                    { title: "Cybermobbing erkennen", text: "Es ist mehr als nur ein blöder Spruch.", items: ["Wenn jemand im Netz absichtlich, wiederholt und gemein fertiggemacht wird, ist das Cybermobbing.", "Dazu gehört auch das heimliche Teilen von peinlichen Fotos oder der Ausschluss aus Klassengruppen."] },
-                    { title: "Richtig reagieren", text: "Du bist nicht allein!", items: ["Nicht zurückbeleidigen! Das macht es oft schlimmer.", "Beweise sichern: Mache Screenshots von den fiesen Nachrichten, bevor sie gelöscht werden.", "Hilfe holen: Sprich sofort mit deinen Eltern, Lehrern oder melde dich bei Portalen wie 'Nummer gegen Kummer'."] }
-                ],
-                missions: ["Finde heraus, wie man an deinem Gerät einen Screenshot (Bildschirmfoto) macht.", "Notiere dir die Telefonnummer oder Webseite der 'Nummer gegen Kummer'.", "Überlegt zu zweit: Wie würdet ihr reagieren, wenn ein Mitschüler im Chat ausgelacht wird?", "Schreibe auf, wem du dich anvertrauen würdest, wenn du online geärgert wirst.", "Finde in eurer Schul-App oder auf der Homepage heraus, ob es Vertrauenslehrer gibt."]
-            },
-            6: {
-                sections: [
-                    { title: "Clever suchen", text: "Wie ein Meisterdetektiv im Netz.", items: ["Nutze Schlagwörter (Keywords) statt ganzer Sätze. Falsch: 'Was fressen Eisbären?'. Richtig: 'Eisbär Nahrung'.", "Das Minus-Zeichen schließt Dinge aus (z.B. 'Jaguar -Auto' findet nur das Tier).", "Nutze Kindersuchmaschinen wie FragFinn.de oder Blinde-Kuh.de, um sichere und leicht verständliche Texte zu finden."] },
-                    { title: "Treffer bewerten", text: "Nicht alles was oben steht, ist wahr.", items: ["Achtung bei 'Anzeige' oder 'Gesponsert': Dafür hat eine Firma Geld bezahlt. Der beste Treffer kommt oft erst danach.", "Lies den kurzen Text (Snippet) unter dem blauen Link, bevor du wahllos klickst."] }
-                ],
-                missions: ["Suche auf Blinde-Kuh.de nach Informationen über den Planeten Mars.", "Nutze bei Google den Trick mit dem Minus: Suche nach 'Römer -Auto'.", "Suche nach dem Wort 'Schuhe' und zähle, wie viele der ersten Ergebnisse als 'Anzeige' markiert sind.", "Schreibe drei gute Keywords auf, um etwas über das Römische Reich herauszufinden.", "Lies nur den Vorschautext (Snippet) eines Suchergebnisses und überlege, ob es deine Frage beantwortet."]
-            },
-            19: {
-                sections: [
-                    { title: "Warum Passwörter wichtig sind", text: "Dein digitaler Haustürschlüssel.", items: ["Ein schlechtes Passwort (wie '123456' oder 'Hallo') lässt sich von Computerprogrammen in einer Sekunde knacken.", "Verrate dein Passwort niemals deinen Freunden! Nur dir und evtl. deinen Eltern."] },
-                    { title: "Das perfekte Passwort", text: "Lang und unmöglich zu erraten.", items: ["Länge ist wichtiger als Verrücktheit! Mindestens 12 Zeichen.", "Der Merksatz-Trick: Denke dir einen Quatsch-Satz aus. Z.B. 'Ich esse jeden Morgen 3 grüne Äpfel!' wird zu 'IejM3gÄ!'. Das kann niemand erraten!"] }
-                ],
-                missions: ["Erfinde einen verrückten Merksatz für ein neues Passwort.", "Wandle deinen Merksatz in ein Passwort um (nur Anfangsbuchstaben und Zahlen).", "Prüfe gedanklich dein aktuelles Schul-Passwort: Ist es länger als 8 Zeichen?", "Überlege dir, warum 'Hund123' ein furchtbares Passwort ist.", "Finde heraus, was ein 'Passwort-Manager' ist (z.B. durch eine kurze Internetsuche)."]
-            },
-
-            // KLASSE 7-8 (SKILLS)
-            8: {
-                sections: [
-                    { title: "1. Technische Bedienung", text: "Video und Bild in Szene setzen.", items: ["Schnitt-Tools: Nutze Programme wie iMovie, CapCut oder Clipchamp. Importiere deine Roh-Clips.", "Zeitleiste (Timeline): Ordne deine Clips nacheinander an. Nutze die 'Schere' (Split), um langweilige Pausen herauszuschneiden.", "Audio-Spur: Lege Hintergrundmusik auf eine zweite Spur und drehe die Lautstärke so weit runter, dass man Sprecher noch versteht."] },
-                    { title: "2. Kriterien für Qualität", text: "Was ein gutes Video ausmacht.", items: ["Roter Faden: Dein Video braucht einen klaren Anfang (Hook), einen Mittelteil und ein Ende.", "Guter Ton: Ein wackeliges Bild verzeiht man, schlechten Ton (Windrauschen) schalten Zuschauer sofort ab.", "Kurz & Knackig: Schneide rücksichtslos alles raus, was die Geschichte nicht voranbringt."] }
-                ],
-                missions: ["Nimm ein 10-sekündiges Video mit deinem Gerät auf.", "Öffne ein Videoschnitt-Programm und lade den Clip in die Zeitleiste.", "Schneide den Clip genau in der Mitte durch (Split) und lösche die zweite Hälfte.", "Lege einen kurzen Text-Titel über den Beginn deines Videos.", "Exportiere dein Projekt als fertige .MP4 oder .MOV Datei."]
-            },
-            9: {
-                sections: [
-                    { title: "1. Technische Bedienung", text: "Mit Daten rechnen in Excel/Calc.", items: ["Zellen ansprechen: Jedes Kästchen hat eine Adresse (z.B. B4).", "Formeln starten: Eine Formel beginnt IMMER mit einem Gleichheitszeichen (=).", "Die Summe: Nutze =SUMME(A1:A5), um alle Zahlen in diesem Bereich blitzschnell zusammenzurechnen."] },
-                    { title: "2. Kriterien für Qualität", text: "Daten verständlich machen.", items: ["Übersichtlichkeit: Markiere Überschriften fett und nutze Rahmenlinien für Tabellen.", "Visuell aufbereiten: Rohe Zahlen sind langweilig. Markiere die Daten und erstelle ein 'Kreisdiagramm' oder 'Säulendiagramm'.", "Beschriftung: Ein Diagramm ohne Achsenbeschriftung und Titel ist wertlos."] }
-                ],
-                missions: ["Öffne Excel/Calc und trage in Spalte A deine 3 Lieblingsessen ein.", "Trage in Spalte B fiktive Preise für diese Essen ein.", "Berechne in einer neuen Zelle die Summe der Preise mit der Formel =SUMME().", "Markiere die Essen und die Preise und erstelle ein Säulendiagramm.", "Gib deinem Diagramm einen passenden Titel (z.B. 'Meine Essenskosten')."]
-            },
-            20: {
-                sections: [
-                    { title: "1. Technische Bedienung", text: "Fotos optimieren.", items: ["Zuschneiden (Crop): Entferne störende Ränder, um den Fokus auf das Hauptmotiv zu lenken.", "Helligkeit & Kontrast: Heller machen ist gut, aber achte darauf, dass helle Flächen nicht 'ausbrennen' (komplett weiß werden).", "Farbstich: Nutze den Weißabgleich (Temperatur), wenn ein Foto drinnen zu gelb oder draußen zu blau wirkt."] },
-                    { title: "2. Kriterien für Qualität", text: "Natürlichkeit vs. Manipulation.", items: ["Weniger ist mehr: Ein Filter auf 100% sieht oft künstlich aus. Reduziere die Deckkraft auf 30-50%.", "Aussagekraft: Bearbeite ein Bild so, dass die Stimmung (z.B. düster oder fröhlich) zum Thema passt.", "Ethik: Verändere niemals Körperproportionen von Menschen. Das erzeugt falsche Schönheitsideale."] }
-                ],
-                missions: ["Mache ein Foto von einem Gegenstand vor dir.", "Öffne das Foto in einer Bearbeitungs-App und schneide die Ränder weg (Crop).", "Erhöhe den Kontrast des Bildes leicht.", "Lege einen Schwarz-Weiß-Filter auf das Bild.", "Vergleiche das Original mit der bearbeiteten Version: Was wirkt besser?"]
-            },
-            21: {
-                sections: [
-                    { title: "1. Technische Bedienung", text: "Stimme aufnehmen und schneiden.", items: ["Pegeln: Sprich ins Mikrofon. Der Ausschlag sollte im grünen/gelben Bereich sein. Rot bedeutet, es 'übersteuert' (kratzt).", "Schnitt: Markiere Versprecher in der Tonspur (z.B. in Audacity) und drücke Entf.", "Export: Speichere Podcasts immer als .MP3-Datei, um Speicherplatz zu sparen."] },
-                    { title: "2. Kriterien für Qualität", text: "Zuhören leicht gemacht.", items: ["Raumklang: Nimm nicht in leeren Räumen auf (Hall). Ein Raum mit Teppich oder Vorhängen klingt viel professioneller.", "Sprechtempo: Sprich 20% langsamer als normal und betone deutlich.", "Struktur: Beginne mit einem Intro, das sofort verrät, worum es im Podcast geht."] }
-                ],
-                missions: ["Nimm eine kurze Sprachnachricht (15 Sek.) auf: Begrüße deine unsichtbaren Hörer.", "Höre dir die Aufnahme an: Gibt es Hall oder störende Hintergrundgeräusche?", "Versuche, eine Pause von 3 Sekunden absichtlich in der Aufnahme zu lassen.", "Finde in deinem Aufnahmeprogramm die Funktion, um diese 3 Sekunden herauszuschneiden.", "Überlege dir einen coolen Titel für einen eigenen Podcast."]
-            },
-            // KLASSE 7-8 (REFLEXION)
-            10: {
-                sections: [
-                    { title: "Fremde Werke nutzen", text: "Du darfst nicht einfach klauen.", items: ["Bilder, Texte und Musik aus dem Internet gehören demjenigen, der sie gemacht hat (Urheber).", "Wenn du einfach ein Google-Bild für deine öffentliche Präsentation nutzt, begehst du eine Urheberrechtsverletzung."] },
-                    { title: "Die legale Lösung", text: "Creative Commons & freie Bilder.", items: ["Nutze Bilddatenbanken wie Pixabay.com oder Unsplash.com. Diese Bilder sind explizit zur freien Nutzung freigegeben.", "Quellenangabe: Gib bei Texten immer an, woher du sie hast. Zitat in Anführungszeichen setzen und den Link / Autor nennen!"] }
-                ],
-                missions: ["Suche auf der Plattform 'Pixabay.com' nach einem Foto von einer Stadt.", "Finde heraus, was unter dem Bild bei 'Lizenz' steht (meistens frei für kommerzielle Nutzung).", "Kopiere einen Satz aus Wikipedia und setze ihn korrekt in Anführungszeichen.", "Schreibe die genaue URL (den Link) als Quellenangabe unter das Zitat.", "Erkläre einem Mitschüler in einem Satz, was das Urheberrecht schützt."]
-            },
-            11: {
-                sections: [
-                    { title: "Fake News erkennen", text: "Glaube nicht alles, was online steht.", items: ["Checke die Quelle: Wer hat das geschrieben? Eine bekannte Zeitung oder ein anonymer Blog?", "Reißerische Titel (Clickbait): Wenn Überschriften stark emotional machen ('Du wirst nicht glauben was passiert!'), ist die Nachricht oft übertrieben oder falsch.", "Bilder-Rückwärtssuche: Oft werden alte Bilder für neue Lügen recycelt. Man kann Bilder bei Google hochladen und prüfen, woher sie wirklich kommen."] },
-                    { title: "Die 2-Quellen-Regel", text: "Sicher gehen beim Recherchieren.", items: ["Wenn du eine krasse Behauptung liest, suche nach dem Thema bei Google News. Berichten auch seriöse Tagesschau oder Spiegel darüber? Wenn nicht, ist es meist Fake."] }
-                ],
-                missions: ["Suche eine aktuelle Schlagzeile auf einer Nachrichten-Webseite (z.B. tagesschau.de).", "Suche dasselbe Thema bei Google. Berichten auch andere Medien darüber?", "Suche das Impressum auf eurer Schul-Homepage (wer ist verantwortlich?).", "Finde heraus, wie die 'Google Bilderrückwärtssuche' funktioniert.", "Diskutiert kurz: Warum erfinden Menschen eigentlich absichtlich Fake News?"]
-            },
-            12: {
-                sections: [
-                    { title: "Der Preis des 'Kostenlosen'", text: "Du bezahlst mit deinen Daten.", items: ["Instagram, TikTok und YouTube sind nicht gratis. Sie sammeln Daten darüber, wie lange du dir was ansiehst, um ein Profil von dir zu erstellen.", "Tracker: Unsichtbare Programme verfolgen dich über verschiedene Webseiten hinweg, um dir passende Werbung anzuzeigen."] },
-                    { title: "Deine Privatsphäre schützen", text: "Nimm die Kontrolle zurück.", items: ["Cookie-Banner: Klicke nicht blind auf 'Alle akzeptieren'. Nimm dir die 3 Sekunden, um auf 'Nur essenzielle' oder 'Ablehnen' zu klicken.", "Profile auf Privat: Stelle deine Social-Media-Accounts so ein, dass nur deine Freunde deine Bilder sehen können."] }
-                ],
-                missions: ["Öffne eine beliebige Nachrichten-Website und lehne im Cookie-Banner alles ab, was nicht zwingend nötig ist.", "Prüfe in den Einstellungen deines Handys, welche Apps Zugriff auf deinen Standort (GPS) haben.", "Entziehe einer App, die deinen Standort nicht braucht (z.B. ein Spiel), diese Berechtigung.", "Überprüfe, ob dein Instagram/TikTok-Konto auf 'Privat' oder 'Öffentlich' steht.", "Lösche den Verlauf und die Cookies in deinem Webbrowser."]
-            },
-            22: {
-                sections: [
-                    { title: "Die Macht des Algorithmus", text: "Warum du nicht aufhören kannst zu scrollen.", items: ["Algorithmen analysieren jede Millisekunde deines Verhaltens. Wenn du bei einem Katzenvideo 2 Sekunden länger stehen bleibst, bekommst du danach 10 weitere Katzenvideos.", "Endless Scroll: Es gibt kein 'Ende' mehr auf der Seite, was dein Gehirn austrickst und dich länger in der App hält."] },
-                    { title: "Die Filterblase", text: "Du siehst nur, was du magst.", items: ["Weil der Algorithmus dir nur zeigt, was du ohnehin gut findest, verlierst du den Blick für andere Meinungen. Du lebst in einer 'Filterblase'.", "Digital Wellbeing: Nutze die Bildschirmzeit-Funktion deines Handys, um dir selbst App-Limits zu setzen (z.B. max. 1h TikTok am Tag)."] }
-                ],
-                missions: ["Finde in den Einstellungen deines Handys die Statistik zur 'Bildschirmzeit' (Digital Wellbeing).", "Schreibe auf, welche App du diese Woche am längsten genutzt hast.", "Setze dir testweise ein App-Limit von 30 Minuten für deine meistgenutzte App.", "Like absichtlich 3 Videos/Beiträge zu einem Thema, das dich eigentlich nicht interessiert.", "Beobachte morgen: Hat sich dein Feed (deine Vorschläge) durch die 3 Likes verändert?"]
-            },
-
-            // KLASSE 9-10 (SKILLS)
-            13: {
-                sections: [
-                    { title: "1. Technische Bedienung", text: "Die Kunst des Prompt-Engineerings.", items: ["Rolle + Aufgabe + Format: Sag der KI genau, was sie tun soll. Z.B. 'Handle als Historiker (Rolle). Fasse den 2. Weltkrieg (Aufgabe) in 3 kurzen Stichpunkten zusammen (Format).'", "Iteratives Arbeiten: Gib dich nicht mit der ersten Antwort zufrieden. Korrigiere die KI: 'Das war zu kompliziert, schreibe es einfacher.'"] },
-                    { title: "2. Kriterien für Qualität", text: "KI als Assistent, nicht als Ersatz.", items: ["Halluzinationen: KIs lügen manchmal sehr überzeugend. Überprüfe Fakten immer mit einer echten Suchmaschine!", "Stil: KI-Texte klingen oft seelenlos oder benutzen immer dieselben Phrasen ('Zusammenfassend lässt sich sagen...'). Schreibe den Text immer in deinem eigenen Stil um.", "Urheberrecht: Gib in der Schule immer an, wenn du eine KI zur Hilfe genutzt hast."] }
-                ],
-                missions: ["Schreibe einen schlechten Prompt (z.B. 'Erkläre Photosynthese').", "Schreibe den Prompt nach der Formel um: 'Erkläre Photosynthese für einen 10-Jährigen in 3 Sätzen'.", "Vergleiche die Ergebnisse: Warum ist der zweite Prompt besser?", "Bitte eine KI (falls erlaubt/verfügbar), dir eine Quelle/Buch für ein Thema zu nennen.", "Prüfe per Google, ob das von der KI genannte Buch überhaupt existiert."]
-            },
-            14: {
-                sections: [
-                    { title: "1. Technische Bedienung", text: "Das digitale Profil erstellen.", items: ["PDFs zusammenfügen: Lerne, wie man Anschreiben, Lebenslauf und Zeugnisse in eine einzige PDF-Datei mergt (z.B. mit Tools wie PDF24 oder Adobe).", "Dateigröße: Eine Bewerbung sollte nicht größer als 5 MB sein. Komprimiere Bilder im Dokument vorher.", "E-Mail-Etikette: Betreffzeilen müssen aussagekräftig sein (z.B. 'Bewerbung als Praktikant - Max Mustermann')."] },
-                    { title: "2. Kriterien für Qualität", text: "Der erste Eindruck zählt.", items: ["Seriöse E-Mail: Nutze für Bewerbungen keine Adressen wie 'unicorn-fan2010@web.de'. Erstelle eine seriöse Adresse (vorname.nachname@...).", "LinkedIn/Xing: Ein sauberes Profil mit professionellem Foto wirkt Wunder. Partybilder gehören hier nicht hin.", "Fehlerfreiheit: Lass dein Anschreiben IMMER von zwei anderen Personen auf Rechtschreibung gegenlesen."] }
-                ],
-                missions: ["Erstelle testweise eine PDF-Datei aus einem leeren Word-Dokument.", "Recherchiere online ein kostenloses Tool zum 'PDF zusammenfügen' (Merge PDF).", "Schreibe einen seriösen E-Mail-Betreff für eine Bewerbung als Praktikant im Krankenhaus.", "Prüfe deine aktuelle E-Mail-Adresse: Ist sie seriös genug für eine Bewerbung?", "Überprüfe deine Social-Media-Profile: Gibt es dort öffentliche Bilder, die ein Chef nicht sehen sollte?"]
-            },
-            15: {
-                sections: [
-                    { title: "1. Technische Bedienung", text: "Kollaboration im Team.", items: ["Cloud-Dokumente: Nutze Office 365, um mit mehreren Leuten gleichzeitig im selben Word/PowerPoint-Dokument zu schreiben.", "Kanban-Boards: Nutze Tools wie Trello oder Microsoft Planner. Organisiere Aufgaben in Spalten: 'Zu tun', 'In Arbeit', 'Erledigt'.", "Versionierung: Wenn ihr Dateien hin- und herschickt, nennt sie 'Referat_v1', 'Referat_v2', niemals 'Referat_fertig_wirklich_final'."] },
-                    { title: "2. Kriterien für Qualität", text: "Warum Projekte scheitern (und wie nicht).", items: ["Klare Verantwortlichkeiten: Jede Aufgabe im Board braucht genau eine Person, die dafür zuständig ist.", "Deadlines: Aufgaben ohne konkretes Datum werden meistens zu spät erledigt.", "Kommunikation: Lieber einmal zu viel im Gruppenchat nachfragen als am Ende doppelte Arbeit zu haben."] }
-                ],
-                missions: ["Lege auf einem Blatt Papier ein kleines Kanban-Board an (3 Spalten: To Do, Doing, Done).", "Schreibe 3 Aufgaben für dein nächstes Schulprojekt auf Post-its und klebe sie in 'To Do'.", "Verschiebe ein Post-it in 'Doing', um den Workflow zu simulieren.", "Finde heraus, wie man ein Dokument in Office 365 für einen Mitschüler 'freigibt' (Teilen-Button).", "Diskutiert in der Gruppe: Warum ist 'Referat_final_fertig_v3' ein schlechter Dateiname?"]
-            },
-            23: {
-                sections: [
-                    { title: "1. Technische Bedienung", text: "Wie das Web funktioniert.", items: ["HTML & CSS: HTML ist das Gerüst (Texte, Bilder) einer Webseite, CSS ist die Farbe und das Design.", "Baukästen: Systeme wie WordPress oder Jimdo helfen dir, Webseiten per Drag & Drop zu bauen, ohne programmieren zu müssen.", "Responsive: Webseiten müssen sich automatisch anpassen, je nachdem, ob man sie auf dem Handy oder dem großen Monitor ansieht."] },
-                    { title: "2. Kriterien für Qualität", text: "User Experience (UX).", items: ["Mobile First: Da 80% der Leute Webseiten auf dem Handy ansehen, muss das Design auf kleinen Bildschirmen perfekt sein.", "Ladezeiten: Riesige Bilder machen die Seite langsam. User brechen ab, wenn eine Seite länger als 3 Sekunden lädt.", "Klarheit (Call to Action): Der Besucher muss sofort wissen, worum es geht und wo er klicken soll."] }
-                ],
-                missions: ["Gehe auf deine Lieblingswebseite und drücke am PC 'F12' (Entwicklertools).", "Schau dir den unverständlichen Code an – das ist HTML! Schließe das Fenster wieder.", "Öffne die Schul-Homepage auf dem Handy und am PC. Vergleiche, wie sich das Menü anpasst (Responsive Design).", "Skizziere auf einem Zettel eine Homepage für ein fiktives Startup.", "Achte bei deiner Skizze darauf, dass der wichtigste Button ('Kaufen' / 'Kontakt') sofort ins Auge fällt."]
-            },
-            // KLASSE 9-10 (REFLEXION)
-            16: {
-                sections: [
-                    { title: "Bias (Vorurteile) in Algorithmen", text: "KIs sind nicht neutral.", items: ["Künstliche Intelligenz lernt aus alten Daten von Menschen. Wenn diese Daten rassistisch oder sexistisch waren, übernimmt die KI diese Vorurteile.", "Beispiel: Ein Bewerbungs-Algorithmus hat mal Frauen systematisch benachteiligt, weil er aus alten Daten gelernt hat, dass Führungskräfte meistens männlich sind."] },
-                    { title: "Deepfakes & Wahrheit", text: "Der Angriff auf unsere Wahrnehmung.", items: ["KI kann täuschend echte Videos und Stimmen von Politikern oder Prominenten erzeugen (Deepfakes), die Dinge sagen, die sie nie gesagt haben.", "Folge: Das Vertrauen in digitale Medien sinkt extrem. Du musst lernen, kritischer denn je zu hinterfragen, was ein 'Beweisvideo' wert ist."] }
-                ],
-                missions: ["Recherchiere den Begriff 'Deepfake' und finde ein prominentes Beispiel.", "Diskutiere: Welche Gefahr stellen Deepfakes für Wahlen oder die Demokratie dar?", "Gib einer Bild-KI den Prompt 'Zeige einen typischen Chef'. Welches Geschlecht und Alter hat das Bild meistens?", "Was bedeutet der englische Begriff 'Bias' in der Informatik?", "Überlege: Wem gehören eigentlich die Rechte an einem Bild, das eine KI gemalt hat?"]
-            },
-            17: {
-                sections: [
-                    { title: "Hate Speech", text: "Worte als Waffe.", items: ["Hassrede im Netz (Rassismus, Sexismus, Drohungen) ist keine 'freie Meinungsäußerung', sondern oft eine Straftat.", "Der Echo-Kammer-Effekt: In extremen Gruppen schaukeln sich Menschen gegenseitig hoch, die Hemmschwelle sinkt drastisch."] },
-                    { title: "Zivilcourage zeigen", text: "Counter Speech (Gegenrede).", items: ["Schweigen ist oft Zustimmung. Es ist wichtig, sachlich gegenzuhalten ('Counter Speech'), um Mitlesern zu zeigen, dass Hass nicht normal ist.", "Melden & Blockieren: Nutze die Melde-Funktionen der Netzwerke aktiv, um strafbare Inhalte entfernen zu lassen. Bei schweren Drohungen: Polizei (Internetwache) einschalten!"] }
-                ],
-                missions: ["Finde auf Instagram/TikTok heraus, wo genau sich der 'Beitrag melden'-Button versteckt.", "Recherchiere: Welche Strafen stehen in Deutschland auf schwere Beleidigung oder Volksverhetzung im Netz?", "Überlege dir eine sachliche, nicht-aggressive Antwort (Counter Speech) auf einen fiktiven Hasskommentar.", "Was ist die 'Internetwache' der Polizei und wofür wird sie genutzt?", "Diskutiert: Ab wann ist ein Kommentar keine freie Meinung mehr, sondern Hassrede?"]
-            },
-            18: {
-                sections: [
-                    { title: "Dein Profil im Netz", text: "Das Internet als dein Lebenslauf.", items: ["Jeder Klick, jedes Foto, jeder dumme Kommentar aus deiner Jugendzeit hinterlässt einen digitalen Fußabdruck.", "Arbeitgeber scannen (googlen) Bewerber oft vor dem Vorstellungsgespräch. Ein peinliches Party-Foto von vor 4 Jahren kann dich den Traumjob kosten."] },
-                    { title: "Digitale Hygiene", text: "Aufräumen im Netz.", items: ["Ego-Googling: Suche regelmäßig deinen eigenen Namen (in Anführungszeichen) in Google und checke auch die Bildersuche.", "Löschen lassen: Wenn andere peinliche Fotos von dir gepostet haben, fordere sie auf, diese zu löschen (Recht am eigenen Bild)."] }
-                ],
-                missions: ["Setze deinen Vor- und Nachnamen in Anführungszeichen und suche dich selbst bei Google.", "Klicke dabei auch auf die Google-Bildersuche. Bist du mit den Ergebnissen zufrieden?", "Prüfe die Privatsphäre-Einstellungen deines ältesten Social-Media-Accounts.", "Finde heraus, wie man bei Google beantragt, dass ein bestimmtes Suchergebnis gelöscht wird.", "Lösche heute einen alten, peinlichen Beitrag oder ein Foto von dir im Netz."]
-            },
-            24: {
-                sections: [
-                    { title: "Daten sind das neue Öl", text: "Das Geschäftsmodell der Tech-Giganten.", items: ["Meta (Instagram, WhatsApp) und Google sind keine sozialen Dienste, sondern die größten Werbeagenturen der Welt. Ihr Produkt bist DU.", "Big Data: Millionen von kleinsten Datenpunkten (wann du wo bist, was du likest, wie schnell du tippst) werden zu unfassbar präzisen Profilen zusammengefügt."] },
-                    { title: "Micro-Targeting", text: "Manipulation nach Maß.", items: ["Weil Plattformen dich besser kennen als deine Eltern, können sie dir Werbung (oder politische Nachrichten) zeigen, die exakt auf deine aktuellen Ängste oder Wünsche zugeschnitten sind.", "Dark Patterns: Webseiten nutzen fiese Design-Tricks (z.B. schwer auffindbare 'Abbrechen'-Buttons), um dir noch mehr Daten zu entlocken."] }
-                ],
-                missions: ["Gehe auf eine beliebige Webseite und suche nach einem 'Dark Pattern' (z.B. ein riesiger grüner Zustimmen-Button und ein winzig grauer Ablehnen-Button).", "Recherchiere den Skandal um 'Cambridge Analytica' (ca. 2018). Worum ging es?", "Schau in deinen Social-Media-Feed: Warum wird dir genau diese Werbung gerade angezeigt?", "Finde heraus, wo du bei Instagram/Google deine Werbepräferenzen (Interessen) einsehen kannst.", "Diskutiert: Ist es eigentlich schlimm, dass Firmen unsere Daten haben, wenn wir dafür kostenlose Apps bekommen?"]
-            }
-        };
-
-        // --- DER DYNAMISCHE WISSENSSPEICHER (Layout & Rendering) ---
-        const RenderWissensspeicher = ({ module }) => {
-            const data = MODULE_CONTENT_DATA[module.id];
-            
-            if (!data) {
-                return (
-                    <div className="text-center py-12 px-4">
-                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                            <Icon name="book-open" size={40} />
-                        </div>
-                        <h3 className="text-xl font-black text-slate-800 mb-2">Inhalte in Arbeit</h3>
-                        <p className="text-slate-500 text-sm max-w-sm mx-auto">Der Wissensspeicher für dieses Modul wird gerade erstellt.</p>
-                    </div>
-                );
-            }
-
-            // Theme basierend auf der Stufe festlegen
-            const theme = {
-                "5-6": {
-                    introTitle: "Modul geschafft!",
-                    introText: "Herzlichen Glückwunsch! Du hast dieses Modul gemeistert. Hier ist dein Spickzettel:",
-                    bgHeader: "bg-green-50 border-green-100",
-                    textHeader: "text-green-800",
-                    iconHeader: "text-green-600",
-                    bulletIcon: "check-circle",
-                    bulletColor: "text-green-500",
-                    missionBox: "bg-amber-50 border-amber-200",
-                    missionTitle: "text-amber-900",
-                    missionIconText: "text-amber-600",
-                    missionListBg: "bg-white border-amber-100",
-                    missionTitleText: "Deine Missionen 🚀"
-                },
-                "7-8": {
-                    introTitle: "Erfolgreich zertifiziert!",
-                    introText: "Sehr gut! Hier findest du die wichtigsten Fakten und Methoden im Überblick:",
-                    bgHeader: "bg-indigo-50 border-indigo-100",
-                    textHeader: "text-indigo-800",
-                    iconHeader: "text-indigo-600",
-                    bulletIcon: "info",
-                    bulletColor: "text-indigo-500",
-                    missionBox: "bg-blue-50 border-blue-200",
-                    missionTitle: "text-blue-900",
-                    missionIconText: "text-blue-600",
-                    missionListBg: "bg-white border-blue-100",
-                    missionTitleText: "Praxis-Challenges ⚡"
-                },
-                "9-10": {
-                    introTitle: "Modul abgeschlossen",
-                    introText: "Relevantes Fachwissen und Best Practices für deinen weiteren Weg:",
-                    bgHeader: "bg-slate-100 border-slate-200",
-                    textHeader: "text-slate-800",
-                    iconHeader: "text-slate-600",
-                    bulletIcon: "target",
-                    bulletColor: "text-emerald-500",
-                    missionBox: "bg-emerald-50 border-emerald-200",
-                    missionTitle: "text-emerald-900",
-                    missionIconText: "text-emerald-600",
-                    missionListBg: "bg-white border-emerald-100",
-                    missionTitleText: "Transfer-Aufgaben 🎯"
-                }
-            }[module.stage];
-
-            return (
-                <div className="space-y-8 text-slate-700 leading-relaxed">
-                    {/* Intro Banner */}
-                    <div className={`${theme.bgHeader} p-5 rounded-3xl border`}>
-                        <h4 className={`font-black ${theme.textHeader} text-lg flex items-center gap-2 mb-2`}>
-                            <Icon name="trophy" size={24} className={theme.iconHeader} /> {theme.introTitle}
-                        </h4>
-                        <p className={`text-sm font-medium ${theme.textHeader} opacity-90`}>{theme.introText}</p>
-                    </div>
-
-                    {/* Content Sections */}
-                    {data.sections.map((sec, idx) => (
-                        <div key={idx}>
-                            <h4 className="font-black text-xl text-slate-800 mb-3 flex items-center gap-2">
-                                <span className="text-[#BF0D3E]">{idx + 1}.</span> {sec.title}
-                            </h4>
-                            <p className="text-sm mb-3 font-medium">{sec.text}</p>
-                            {sec.items && (
-                                <ul className="list-none text-sm space-y-3">
-                                    {sec.items.map((item, i) => (
-                                        <li key={i} className="flex gap-3 items-start bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                                            <Icon name={theme.bulletIcon} size={18} className={`${theme.bulletColor} shrink-0 mt-0.5`} />
-                                            <p dangerouslySetInnerHTML={{ __html: item.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/'(.*?)'/g, '<code class="bg-slate-200 text-slate-800 px-1 rounded font-bold">$1</code>') }} />
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
-                    ))}
-
-                    {/* Missions Section */}
-                    {data.missions && data.missions.length > 0 && (
-                        <div className={`${theme.missionBox} p-6 rounded-3xl border mt-8`}>
-                            <h4 className={`font-black ${theme.missionTitle} text-lg flex items-center gap-2 mb-4`}>
-                                <Icon name="flag" size={20} className={theme.missionIconText} /> {theme.missionTitleText}
-                            </h4>
-                            <ul className="space-y-3">
-                                {data.missions.map((mission, i) => (
-                                    <li key={i} className={`flex gap-3 ${theme.missionListBg} p-4 rounded-2xl shadow-sm border`}>
-                                        <Icon name="play" size={16} className={`${theme.missionIconText} shrink-0 mt-0.5`} />
-                                        <span className={`${theme.missionTitle} font-medium text-sm`}>{mission}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-                </div>
-            );
-        };
-
-
-        // --- HAUPT-APP ---
         const App = () => {
             const [user, setUser] = useState(null);
-            const [studentData, setStudentData] = useState(null);
+            const [students, setStudents] = useState([]);
             const [loading, setLoading] = useState(true);
-            const [authRequired, setAuthRequired] = useState(false);
             const [errorMsg, setErrorMsg] = useState("");
-            const [activeStage, setActiveStage] = useState("5-6");
-            
-            // Zustand für das offene Modul (Modal)
-            const [selectedModule, setSelectedModule] = useState(null);
+            const [debugMsg, setDebugMsg] = useState("");
+            const [isUpdating, setIsUpdating] = useState(false);
+
+            // Filters
+            const [searchName, setSearchName] = useState("");
+            const [filterJahrgang, setFilterJahrgang] = useState("ALL");
+            const [filterKlasse, setFilterKlasse] = useState("ALL");
+            const [filterModul, setFilterModul] = useState("ALL");
+            const [viewingStudentId, setViewingStudentId] = useState(null);
 
             useEffect(() => {
                 const bootstrap = async () => {
@@ -407,14 +112,12 @@
 
                         if (activeAccount) {
                             setUser({ name: activeAccount.name, username: activeAccount.username });
-                            fetchMyData(activeAccount);
+                            fetchStudents(activeAccount);
                         } else {
-                            setAuthRequired(true);
                             setLoading(false);
                         }
                     } catch (err) {
                         console.error(err);
-                        setAuthRequired(true);
                         setLoading(false);
                     }
                 };
@@ -423,312 +126,391 @@
 
             const handleLogin = () => {
                 setLoading(true);
-                msalInstance.loginRedirect({ scopes: ["Sites.Read.All"] });
+                msalInstance.loginRedirect({ scopes: ["Sites.ReadWrite.All", "GroupMember.Read.All"] });
             };
 
             const handleLogout = () => {
                 msalInstance.logoutRedirect({ postLogoutRedirectUri: window.location.origin });
             };
 
-            const fetchMyData = async (account) => {
+            const fetchStudents = async (account) => {
                 try {
-                    const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["Sites.Read.All"], account });
+                    const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["Sites.ReadWrite.All", "GroupMember.Read.All"], account });
+                    
+                    // Türsteher: Überprüfen, ob User ein Lehrer ist (Kommentiere es aus, wenn du nur testen willst)
+                    /*
+                    const groupRes = await fetch('https://graph.microsoft.com/v1.0/me/memberOf', { headers: { Authorization: `Bearer ${tokenRes.accessToken}` }});
+                    const groups = await groupRes.json();
+                    const isTeacher = groups.value?.some(g => g.id === MS_CONFIG.teacherGroupId);
+                    
+                    if (!isTeacher) {
+                        setErrorMsg("Zugriff verweigert. Du bist nicht als Lehrkraft autorisiert.");
+                        setLoading(false);
+                        return;
+                    }
+                    */
+
                     const url = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${MS_CONFIG.listId}/items?$expand=fields&$top=999`;
-                    const res = await fetch(url, { headers: { Authorization: `Bearer ${tokenRes.accessToken}` }});
+                    const res = await fetch(url, { 
+                        headers: { 
+                            Authorization: `Bearer ${tokenRes.accessToken}`,
+                            Prefer: "HonorNonIndexedQueriesWarningMayFailRandomly"
+                        }
+                    });
                     
                     if (!res.ok) throw new Error("Fehler beim Abrufen der SharePoint-Daten.");
                     const data = await res.json();
                     
-                    const myRecord = data.value.find(item => 
-                        item.fields.Title && item.fields.Title.toLowerCase() === account.username.toLowerCase()
-                    );
-
-                    if (myRecord) {
-                        const f = myRecord.fields;
+                    const loadedStudents = data.value.map(item => {
+                        const f = item.fields;
                         const completedArray = f.Erledigte_Module ? f.Erledigte_Module.split(',').map(m => parseInt(m.trim())).filter(n => !isNaN(n)) : [];
-                        
                         let parsedDates = {};
                         if (f.Modul_Daten) {
                             try { parsedDates = JSON.parse(f.Modul_Daten); } catch(e) {}
                         }
-
-                        setStudentData({
+                        return {
+                            id: item.id,
+                            email: f.Title || "",
                             vorname: f.Vorname || "",
                             nachname: f.Nachname || "",
                             klasse: f.Klasse || "",
                             completedTasks: completedArray,
                             moduleDates: parsedDates
-                        });
-                    } else {
-                        setErrorMsg("Deine E-Mail-Adresse wurde noch nicht in die Datenbank eingetragen. Bitte melde dich bei deiner Lehrkraft.");
-                    }
+                        };
+                    }).filter(s => s.vorname && s.nachname);
+
+                    setStudents(loadedStudents.sort((a,b) => a.nachname.localeCompare(b.nachname)));
                 } catch (error) {
                     if (error.name === "InteractionRequiredAuthError") {
-                        msalInstance.loginRedirect({ scopes: ["Sites.Read.All"] });
+                        msalInstance.loginRedirect({ scopes: ["Sites.ReadWrite.All", "GroupMember.Read.All"] });
                     } else {
-                        setErrorMsg("Fehler beim Laden deiner Daten.");
+                        setErrorMsg("Fehler beim Laden der Daten.");
                     }
                 } finally {
                     setLoading(false);
                 }
             };
 
-            if (loading) {
-                return (
-                    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6">
-                        <div className="spinner mb-6"></div>
-                        <p className="text-sm font-black uppercase text-slate-400 tracking-widest text-center">Lade Profil...</p>
-                    </div>
-                );
+            const getTodayString = () => {
+                const d = new Date();
+                return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth()+1).toString().padStart(2, '0')}.${d.getFullYear()}`;
+            };
+
+            const updateStudentInSharePoint = async (studentId, newTasks, newDates) => {
+                const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["Sites.ReadWrite.All"], account: msalInstance.getActiveAccount() });
+                const url = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${MS_CONFIG.listId}/items/${studentId}/fields`;
+                
+                const payload = {
+                    Erledigte_Module: newTasks.join(", "),
+                    Modul_Daten: JSON.stringify(newDates)
+                };
+
+                await fetch(url, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${tokenRes.accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+            };
+
+            const toggleModuleSingle = async (studentId, moduleId) => {
+                if (isUpdating) return;
+                setIsUpdating(true);
+                setDebugMsg("");
+
+                try {
+                    const student = students.find(s => s.id === studentId);
+                    const isDone = student.completedTasks.includes(moduleId);
+                    
+                    let newTasks, newDates;
+                    if (isDone) {
+                        newTasks = student.completedTasks.filter(id => id !== moduleId);
+                        newDates = { ...student.moduleDates };
+                        delete newDates[moduleId];
+                    } else {
+                        newTasks = [...student.completedTasks, moduleId];
+                        newDates = { ...student.moduleDates, [moduleId]: { datum: getTodayString(), lehrer: user.name } };
+                    }
+
+                    await updateStudentInSharePoint(studentId, newTasks, newDates);
+                    
+                    setStudents(students.map(s => s.id === studentId ? { ...s, completedTasks: newTasks, moduleDates: newDates } : s));
+                    setDebugMsg(`Erfolgreich aktualisiert.`);
+                } catch (err) {
+                    setDebugMsg("Fehler beim Speichern!");
+                    console.error(err);
+                } finally {
+                    setIsUpdating(false);
+                    setTimeout(() => setDebugMsg(""), 3000);
+                }
+            };
+
+            const bulkToggle = async (action) => {
+                if (isUpdating || filterModul === "ALL" || filteredStudents.length === 0) return;
+                setIsUpdating(true);
+                setDebugMsg("Starte Massen-Update...");
+
+                const mId = parseInt(filterModul);
+                let successCount = 0;
+
+                for (const student of filteredStudents) {
+                    const isDone = student.completedTasks.includes(mId);
+                    if ((action === 'grant' && !isDone) || (action === 'revoke' && isDone)) {
+                        let newTasks, newDates;
+                        if (action === 'grant') {
+                            newTasks = [...student.completedTasks, mId];
+                            newDates = { ...student.moduleDates, [mId]: { datum: getTodayString(), lehrer: user.name } };
+                        } else {
+                            newTasks = student.completedTasks.filter(id => id !== mId);
+                            newDates = { ...student.moduleDates };
+                            delete newDates[mId];
+                        }
+                        
+                        try {
+                            await updateStudentInSharePoint(student.id, newTasks, newDates);
+                            setStudents(prev => prev.map(s => s.id === student.id ? { ...s, completedTasks: newTasks, moduleDates: newDates } : s));
+                            successCount++;
+                        } catch(e) {
+                            console.error(`Fehler bei Schüler ${student.nachname}`);
+                        }
+                    }
+                }
+
+                setIsUpdating(false);
+                setDebugMsg(`${successCount} Schüler aktualisiert.`);
+                setTimeout(() => setDebugMsg(""), 3000);
+            };
+
+            // Filter Logic
+            const uniqueKlassen = useMemo(() => [...new Set(students.map(s => s.klasse))].filter(k => k).sort(), [students]);
+            const uniqueJahrgaenge = useMemo(() => {
+                const jgs = new Set();
+                uniqueKlassen.forEach(k => {
+                    const match = k.match(/^(\d+)/);
+                    if (match) jgs.add(match[1]);
+                });
+                return [...jgs].sort((a,b) => parseInt(a) - parseInt(b));
+            }, [uniqueKlassen]);
+
+            let filteredStudents = students;
+            if (searchName) {
+                const sLower = searchName.toLowerCase();
+                filteredStudents = filteredStudents.filter(s => s.vorname.toLowerCase().includes(sLower) || s.nachname.toLowerCase().includes(sLower));
+            }
+            if (filterJahrgang !== "ALL") {
+                filteredStudents = filteredStudents.filter(s => s.klasse.startsWith(filterJahrgang));
+            }
+            if (filterKlasse !== "ALL") {
+                filteredStudents = filteredStudents.filter(s => s.klasse === filterKlasse);
             }
 
-            if (authRequired) {
+            const hasActiveFilters = searchName || filterJahrgang !== "ALL" || filterKlasse !== "ALL" || filterModul !== "ALL";
+            const currentViewingStudent = students.find(s => s.id === viewingStudentId);
+
+            if (loading) {
+                return <div className="min-h-screen flex items-center justify-center"><div className="spinner"></div></div>;
+            }
+
+            if (!user) {
                 return (
-                    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6">
-                        <div className="bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-2xl max-w-md w-full text-center border border-slate-100">
-                            <div className="mx-auto w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 text-[#BF0D3E] shadow-sm">
+                    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+                        <div className="bg-white max-w-md w-full rounded-[2.5rem] shadow-2xl p-10 text-center border border-slate-100">
+                            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 text-[#BF0D3E]">
                                 <Icon name="graduation-cap" size={40} />
                             </div>
-                            <h2 className="text-2xl sm:text-3xl font-black mb-3 uppercase tracking-tighter text-slate-800">Medienpass</h2>
-                            <p className="text-slate-500 mb-8 font-medium text-sm sm:text-base leading-relaxed">Bitte melde dich mit deiner Schul-E-Mail-Adresse an, um deinen Fortschritt zu sehen.</p>
-                            <button 
-                                onClick={handleLogin} 
-                                className="w-full text-white font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all shadow-lg active:scale-95" 
-                                style={{ backgroundColor: THOMA_RED }}>
-                                Anmelden
+                            <h1 className="text-3xl font-black text-slate-800 mb-2">Lehrer-Konsole</h1>
+                            <p className="text-slate-500 mb-8 font-medium">Gymnasium Thomaeum</p>
+                            {errorMsg && <p className="text-red-600 text-sm mb-6 bg-red-50 p-3 rounded-xl">{errorMsg}</p>}
+                            <button onClick={handleLogin} className="w-full bg-[#BF0D3E] hover:bg-red-800 text-white font-bold py-4 rounded-2xl transition-all shadow-lg">
+                                Mit Microsoft verbinden
                             </button>
                         </div>
                     </div>
                 );
             }
 
-            if (errorMsg) {
-                return (
-                    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6">
-                        <div className="bg-white p-8 rounded-[2.5rem] shadow-xl max-w-md w-full text-center border border-red-100">
-                            <div className="mx-auto w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 text-red-500">
-                                <Icon name="user-x" size={32} />
-                            </div>
-                            <h2 className="text-xl font-black mb-2 text-slate-800">Kein Profil gefunden</h2>
-                            <p className="text-slate-500 mb-6 text-sm">{errorMsg}</p>
-                            <button onClick={handleLogout} className="bg-slate-100 text-slate-600 font-bold uppercase px-6 py-3 rounded-xl w-full">Abmelden</button>
-                        </div>
-                    </div>
-                );
-            }
-
-            const totalCompleted = studentData ? studentData.completedTasks.length : 0;
-            // Fortschritt dynamisch anhand aller verfügbaren Module berechnen
-            const progressPercent = Math.round((totalCompleted / ALL_MODULES.length) * 100) || 0;
-
             return (
-                <div className="min-h-screen flex flex-col bg-slate-50 font-sans pb-10 relative">
+                <div className="min-h-screen bg-slate-50 font-sans flex flex-col">
                     
-                    {/* OVERLAY / MODAL: Wissensspeicher */}
-                    {selectedModule && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm">
-                            <div className="bg-white rounded-[2.5rem] w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden relative animate-in fade-in zoom-in-95 duration-200">
-                                {/* Modal Header */}
-                                <div className="bg-[#BF0D3E] text-white p-6 sm:p-8 flex justify-between items-center shrink-0">
+                    {/* STUDENT PROFIL MODAL */}
+                    {currentViewingStudent && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                            <div className="bg-white rounded-[2.5rem] w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+                                <div className="bg-slate-800 text-white p-6 flex justify-between items-center shrink-0">
                                     <div>
-                                        <span className="text-red-200 text-[10px] font-black uppercase tracking-widest mb-1 block">
-                                            {selectedModule.category === 'skills' ? 'Skills (Anwendung)' : 'Umgang (Reflexion)'} • Klasse {selectedModule.stage}
-                                        </span>
-                                        <h2 className="text-2xl sm:text-3xl font-black tracking-tight">{selectedModule.title}</h2>
+                                        <p className="text-slate-300 text-xs font-black uppercase tracking-widest mb-1">Schülerprofil</p>
+                                        <h2 className="text-2xl font-black">{currentViewingStudent.nachname}, {currentViewingStudent.vorname}</h2>
                                     </div>
-                                    <button onClick={() => setSelectedModule(null)} className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-2xl transition-all shadow-sm active:scale-95 border border-white/30" title="Schließen">
-                                        <Icon name="x" size={20} />
-                                        <span className="font-bold uppercase tracking-wider text-xs hidden sm:inline">Schließen</span>
+                                    <button onClick={() => setViewingStudentId(null)} className="bg-white/20 p-2 rounded-full hover:bg-white/30 transition-colors">
+                                        <Icon name="x" size={24} />
                                     </button>
                                 </div>
-
-                                {/* Modal Body (Scrollable) */}
-                                <div className="p-6 sm:p-8 overflow-y-auto">
-                                    <RenderWissensspeicher module={selectedModule} />
+                                <div className="p-6 overflow-y-auto">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                        {ALL_MODULES.map(modul => {
+                                            const isDone = currentViewingStudent.completedTasks.includes(modul.id);
+                                            return (
+                                                <button 
+                                                    key={modul.id}
+                                                    disabled={isUpdating}
+                                                    onClick={() => toggleModuleSingle(currentViewingStudent.id, modul.id)}
+                                                    className={`p-4 rounded-2xl border-2 text-left transition-all flex flex-col h-full ${isDone ? 'bg-green-50 border-green-500 shadow-sm' : 'bg-white border-slate-100 hover:border-slate-300'}`}
+                                                >
+                                                    <div className="flex justify-between items-start mb-2 w-full">
+                                                        <Icon name={modul.icon} size={24} className={isDone ? 'text-green-600' : 'text-slate-400'} />
+                                                        {isDone ? <Icon name="check-circle-2" size={20} className="text-green-500" /> : <Icon name="circle" size={20} className="text-slate-200" />}
+                                                    </div>
+                                                    <div className="text-[10px] font-bold text-slate-400 uppercase mt-auto pt-2">{modul.stage}</div>
+                                                    <div className={`font-bold text-sm leading-tight mt-1 ${isDone ? 'text-green-900' : 'text-slate-700'}`}>{modul.title}</div>
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Header - Mobile Optimiert */}
-                    <header className="bg-[#BF0D3E] text-white pt-12 pb-6 px-6 sm:px-8 shadow-md rounded-b-[2rem] sm:rounded-b-[3rem] relative z-10">
-                        <div className="max-w-5xl mx-auto flex justify-between items-start">
-                            <div className="mr-4">
-                                <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter mb-1">Hallo {studentData?.vorname}!</h1>
-                                <p className="text-red-200 font-bold text-sm sm:text-base opacity-90">Klasse {studentData?.klasse} • Gymnasium Thomaeum</p>
+                    {/* HEADER */}
+                    <header className="bg-[#BF0D3E] text-white pt-10 pb-16 px-6 sm:px-8 shadow-md rounded-b-[2rem] sm:rounded-b-[3rem] relative z-10">
+                        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
+                                    <Icon name="graduation-cap" size={32} />
+                                </div>
+                                <div>
+                                    <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tighter mb-1">Lehrer-Konsole</h1>
+                                    <p className="text-red-200 font-bold text-sm">Gymnasium Thomaeum</p>
+                                </div>
                             </div>
-                            <button onClick={handleLogout} className="flex items-center gap-2 bg-white text-[#BF0D3E] hover:bg-slate-100 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl transition-all shadow-lg active:scale-95 shrink-0 mt-1 sm:mt-0" title="Abmelden">
-                                <Icon name="log-out" size={16} className="sm:w-[18px] sm:h-[18px]" />
-                                <span className="font-black uppercase tracking-wider text-[10px] sm:text-xs">Abmelden</span>
-                            </button>
-                        </div>
-                        
-                        {/* Fortschrittsbalken */}
-                        <div className="max-w-5xl mx-auto mt-8 bg-black/10 p-5 rounded-3xl backdrop-blur-sm">
-                            <div className="flex justify-between items-end mb-3">
-                                <span className="font-black uppercase tracking-widest text-xs sm:text-sm text-white">Dein Fortschritt</span>
-                                <span className="font-black text-2xl sm:text-3xl text-white">{progressPercent}%</span>
+                            <div className="flex items-center gap-4">
+                                <div className="text-right hidden sm:block">
+                                    <p className="text-[10px] font-black text-green-300 uppercase tracking-widest mb-0.5 flex items-center justify-end gap-1"><Icon name="shield-check" size={12}/> Verbunden</p>
+                                    <p className="text-sm font-bold">{user.name}</p>
+                                </div>
+                                <button onClick={handleLogout} className="bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl font-bold uppercase text-xs tracking-wider transition-all flex items-center gap-2">
+                                    <Icon name="log-out" size={16} /> Abmelden
+                                </button>
                             </div>
-                            <div className="h-4 bg-black/20 rounded-full overflow-hidden shadow-inner relative">
-                                <div className="h-full bg-white rounded-full transition-all duration-1000 ease-out" style={{ width: `${progressPercent}%` }}></div>
-                                {/* Trennlinien für die 3 Stufen (33% und 66%) */}
-                                <div className="absolute top-0 bottom-0 left-[33.33%] w-1 bg-black/20"></div>
-                                <div className="absolute top-0 bottom-0 left-[66.66%] w-1 bg-black/20"></div>
-                            </div>
-                            <p className="text-right mt-2 text-[10px] font-bold text-red-200 uppercase">{totalCompleted} von {ALL_MODULES.length} Modulen geschafft</p>
                         </div>
                     </header>
 
-                    {/* Content / Module */}
-                    <main className="flex-grow max-w-5xl mx-auto w-full px-4 sm:px-8 mt-[-1rem] sm:mt-[-2rem] relative z-20">
-                        
-                        {/* Navigation für die Jahrgangsstufen */}
-                        <div className="flex gap-3 mb-2 overflow-x-auto pb-4 scrollbar-hide pt-4 sm:pt-6">
-                            {["5-6", "7-8", "9-10"].map(stage => (
-                                <button 
-                                    key={stage} 
-                                    onClick={() => setActiveStage(stage)} 
-                                    className={`px-6 py-3 rounded-2xl font-black transition-all whitespace-nowrap shadow-sm ${activeStage === stage ? 'text-white shadow-md scale-105' : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'}`} 
-                                    style={activeStage === stage ? { backgroundColor: THOMA_RED } : {}}
-                                >
-                                    Klasse {stage}
-                                </button>
-                            ))}
-                        </div>
+                    {/* SCHWEBENDE FILTER-KARTE */}
+                    <div className="max-w-7xl mx-auto w-full px-4 sm:px-8 -mt-8 relative z-30 mb-8">
+                        <div className="bg-white shadow-xl rounded-[2rem] p-5 sm:p-6 border border-slate-100 flex flex-col gap-4">
+                            <div className="flex flex-wrap gap-4 items-center">
+                                <div className="relative flex-grow min-w-[200px]">
+                                    <Icon name="search" size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                                    <input type="text" placeholder="Nachname / Vorname suchen..." className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#BF0D3E] transition-all" value={searchName} onChange={e => setSearchName(e.target.value)} />
+                                </div>
+                                
+                                <select className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-[#BF0D3E] cursor-pointer transition-all" value={filterJahrgang} onChange={e => {setFilterJahrgang(e.target.value); setFilterKlasse("ALL");}}>
+                                    <option value="ALL">Alle Jahrgänge</option>
+                                    {uniqueJahrgaenge.map(j => <option key={j} value={j}>Jahrgang {j}</option>)}
+                                </select>
 
-                        <div className="mb-10">
-                            <h3 className="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
-                                <Icon name="wrench" size={24} className="text-[#BF0D3E]" /> Skills (Anwendung)
-                            </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {ALL_MODULES.filter(m => m.stage === activeStage && m.category === 'skills').map(modul => {
-                                    const isDone = studentData?.completedTasks.includes(modul.id);
-                                    const moduleData = studentData?.moduleDates[modul.id];
-                                    let dateDone = "—";
-                                    let teacherName = "";
-                                    if (moduleData) {
-                                        if (typeof moduleData === 'string') { dateDone = moduleData; }
-                                        else { dateDone = moduleData.datum || "—"; teacherName = moduleData.lehrer || ""; }
-                                    }
+                                <select className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-[#BF0D3E] cursor-pointer transition-all" value={filterKlasse} onChange={e => setFilterKlasse(e.target.value)}>
+                                    <option value="ALL">Alle Klassen</option>
+                                    {uniqueKlassen.filter(k => filterJahrgang === "ALL" || k.startsWith(filterJahrgang)).map(k => <option key={k} value={k}>Klasse {k}</option>)}
+                                </select>
 
-                                    return (
-                                        <div 
-                                            key={modul.id} 
-                                            onClick={() => { if (isDone) setSelectedModule(modul); }}
-                                            className={`bg-white rounded-2xl p-4 sm:p-5 border-2 transition-all flex flex-col h-full ${isDone ? 'border-green-400 shadow-green-100 shadow-lg cursor-pointer hover:-translate-y-1 hover:shadow-xl' : 'border-slate-100 shadow-sm opacity-90'}`}
-                                        >
-                                            <div className="flex justify-between items-start mb-4">
-                                                <span className="text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 px-3 py-1 rounded-lg">Klasse {modul.stage}</span>
-                                                {isDone ? (
-                                                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white shadow-md shrink-0 ml-2">
-                                                        <Icon name="check" size={16} />
-                                                    </div>
-                                                ) : (
-                                                    <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 shrink-0 ml-2">
-                                                        <Icon name="lock" size={14} />
-                                                    </div>
-                                                )}
-                                            </div>
-                                            
-                                            <h3 className={`font-black text-base lg:text-lg tracking-tight leading-tight mb-2 flex items-start gap-2 ${isDone ? 'text-slate-800' : 'text-slate-500'}`}>
-                                                <Icon name={modul.icon} size={20} className={`mt-0.5 shrink-0 ${isDone ? 'text-[#BF0D3E]' : 'text-slate-300'}`} />
-                                                {modul.title}
-                                            </h3>
-                                            
-                                            <div className="mt-auto">
-                                                {isDone ? (
-                                                    <div>
-                                                        <div className="text-[10px] font-bold text-green-600 flex flex-col gap-0.5 mt-3 mb-4">
-                                                            <span className="flex items-center gap-1">
-                                                                <Icon name="calendar-check" size={12} />
-                                                                Zertifiziert am {dateDone}
-                                                            </span>
-                                                            {teacherName && <span className="text-[9px] text-green-700 ml-4">durch {teacherName}</span>}
-                                                        </div>
-                                                        <div className="pt-3 border-t border-slate-100 text-center">
-                                                            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[#BF0D3E] flex items-center justify-center gap-2 group-hover:text-red-700">
-                                                                <Icon name="book-open" size={14} /> Wissensspeicher
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <p className="text-xs font-medium text-slate-400 mt-3">
-                                                        Noch nicht freigeschaltet.
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                <select className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-[#BF0D3E] cursor-pointer transition-all" value={filterModul} onChange={e => setFilterModul(e.target.value)}>
+                                    <option value="ALL">Modul auswählen...</option>
+                                    {ALL_MODULES.map(m => <option key={m.id} value={m.id}>Modul {m.id}: {m.title} ({m.stage})</option>)}
+                                </select>
                             </div>
+                            
+                            {filterModul !== "ALL" && hasActiveFilters && (
+                                <div className="mt-2 p-5 bg-blue-50 rounded-2xl flex flex-wrap items-center justify-between gap-4 border border-blue-100">
+                                    <div>
+                                        <h3 className="text-sm font-black text-blue-900 uppercase tracking-tight flex items-center gap-2"><Icon name="users" size={16}/> Massen-Bearbeitung (Modul {filterModul})</h3>
+                                        <p className="text-xs font-medium text-blue-700 mt-1">Wendet die Aktion auf alle {filteredStudents.length} angezeigten Schüler an.</p>
+                                    </div>
+                                    <div className="flex gap-2 w-full sm:w-auto">
+                                        <button disabled={isUpdating} onClick={() => bulkToggle('revoke')} className="flex-1 sm:flex-none bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 px-5 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all">Alle zurücksetzen</button>
+                                        <button disabled={isUpdating} onClick={() => bulkToggle('grant')} className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-md active:scale-95">Alle freischalten</button>
+                                    </div>
+                                </div>
+                            )}
+                            {debugMsg && <p className="text-center text-xs font-bold text-green-600 mt-1">{debugMsg}</p>}
                         </div>
+                    </div>
 
-                        <div className="mb-4">
-                            <h3 className="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
-                                <Icon name="brain" size={24} className="text-[#BF0D3E]" /> Reflexion (Umgang)
-                            </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {ALL_MODULES.filter(m => m.stage === activeStage && m.category === 'reflexion').map(modul => {
-                                    const isDone = studentData?.completedTasks.includes(modul.id);
-                                    const moduleData = studentData?.moduleDates[modul.id];
-                                    let dateDone = "—";
-                                    let teacherName = "";
-                                    if (moduleData) {
-                                        if (typeof moduleData === 'string') { dateDone = moduleData; }
-                                        else { dateDone = moduleData.datum || "—"; teacherName = moduleData.lehrer || ""; }
-                                    }
-
-                                    return (
-                                        <div 
-                                            key={modul.id} 
-                                            onClick={() => { if (isDone) setSelectedModule(modul); }}
-                                            className={`bg-white rounded-2xl p-4 sm:p-5 border-2 transition-all flex flex-col h-full ${isDone ? 'border-green-400 shadow-green-100 shadow-lg cursor-pointer hover:-translate-y-1 hover:shadow-xl' : 'border-slate-100 shadow-sm opacity-90'}`}
-                                        >
-                                            <div className="flex justify-between items-start mb-4">
-                                                <span className="text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 px-3 py-1 rounded-lg">Klasse {modul.stage}</span>
-                                                {isDone ? (
-                                                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white shadow-md shrink-0 ml-2">
-                                                        <Icon name="check" size={16} />
-                                                    </div>
-                                                ) : (
-                                                    <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 shrink-0 ml-2">
-                                                        <Icon name="lock" size={14} />
-                                                    </div>
-                                                )}
-                                            </div>
-                                            
-                                            <h3 className={`font-black text-base lg:text-lg tracking-tight leading-tight mb-2 flex items-start gap-2 ${isDone ? 'text-slate-800' : 'text-slate-500'}`}>
-                                                <Icon name={modul.icon} size={20} className={`mt-0.5 shrink-0 ${isDone ? 'text-[#BF0D3E]' : 'text-slate-300'}`} />
-                                                {modul.title}
-                                            </h3>
-                                            
-                                            <div className="mt-auto">
-                                                {isDone ? (
-                                                    <div>
-                                                        <div className="text-[10px] font-bold text-green-600 flex flex-col gap-0.5 mt-3 mb-4">
-                                                            <span className="flex items-center gap-1">
-                                                                <Icon name="calendar-check" size={12} />
-                                                                Zertifiziert am {dateDone}
-                                                            </span>
-                                                            {teacherName && <span className="text-[9px] text-green-700 ml-4">durch {teacherName}</span>}
-                                                        </div>
-                                                        <div className="pt-3 border-t border-slate-100 text-center">
-                                                            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[#BF0D3E] flex items-center justify-center gap-2 group-hover:text-red-700">
-                                                                <Icon name="book-open" size={14} /> Wissensspeicher
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <p className="text-xs font-medium text-slate-400 mt-3">
-                                                        Noch nicht freigeschaltet.
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                    {/* HAUPTBEREICH: TABELLE */}
+                    <main className="max-w-7xl mx-auto w-full px-4 sm:px-8 flex-grow pb-12">
+                        {!hasActiveFilters ? (
+                            <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-12 text-center flex flex-col items-center justify-center min-h-[400px]">
+                                <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-6">
+                                    <Icon name="filter" size={48} />
+                                </div>
+                                <h2 className="text-3xl font-black text-slate-800 mb-3 tracking-tighter">Bereit für die Eingabe</h2>
+                                <p className="text-slate-500 max-w-md font-medium text-lg leading-relaxed">Nutze die Filter oben (z.B. nach Klasse oder Modul), um eine Auswahl anzuzeigen.</p>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="bg-white rounded-[2.5rem] shadow-lg border border-slate-100 overflow-hidden">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-collapse min-w-[600px]">
+                                        <thead>
+                                            <tr className="bg-slate-50/80 text-slate-400 text-xs uppercase tracking-widest font-black border-b border-slate-100">
+                                                <th className="p-5 pl-8">Nachname</th>
+                                                <th className="p-5">Vorname</th>
+                                                <th className="p-5">Klasse</th>
+                                                <th className="p-5 text-center">
+                                                    {filterModul === "ALL" ? "Gesamtfortschritt" : `Status: Modul ${filterModul}`}
+                                                </th>
+                                                <th className="p-5 text-center w-32">Ansicht</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filteredStudents.length === 0 ? (
+                                                <tr><td colSpan="5" className="p-12 text-center text-slate-400 font-bold text-lg">Keine Schüler gefunden.</td></tr>
+                                            ) : filteredStudents.map(student => {
+                                                const totalProgress = Math.round((student.completedTasks.length / ALL_MODULES.length) * 100);
+                                                const isModulDone = filterModul !== "ALL" && student.completedTasks.includes(parseInt(filterModul));
+
+                                                return (
+                                                    <tr key={student.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
+                                                        <td className="p-5 pl-8 font-black text-slate-800 text-lg">{student.nachname || "-"}</td>
+                                                        <td className="p-5 font-semibold text-slate-600">{student.vorname || "-"}</td>
+                                                        <td className="p-5">
+                                                            <span className="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest">{student.klasse}</span>
+                                                        </td>
+                                                        <td className="p-5 text-center">
+                                                            {filterModul === "ALL" ? (
+                                                                <div className="flex items-center justify-center gap-3">
+                                                                    <div className="w-32 h-3 bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                                                                        <div className="h-full bg-green-500 rounded-full" style={{ width: `${totalProgress}%` }}></div>
+                                                                    </div>
+                                                                    <span className="text-xs font-black text-slate-500 w-8">{totalProgress}%</span>
+                                                                </div>
+                                                            ) : (
+                                                                <button 
+                                                                    disabled={isUpdating}
+                                                                    onClick={() => toggleModuleSingle(student.id, parseInt(filterModul))}
+                                                                    className={`w-10 h-10 rounded-xl flex items-center justify-center mx-auto transition-all transform hover:scale-110 active:scale-95 ${isModulDone ? 'bg-green-500 text-white shadow-lg shadow-green-200' : 'bg-slate-100 text-slate-300 hover:bg-green-500 hover:text-white'}`}
+                                                                >
+                                                                    <Icon name={isModulDone ? "check" : "circle"} size={20} />
+                                                                </button>
+                                                            )}
+                                                        </td>
+                                                        <td className="p-5 text-center">
+                                                            <button 
+                                                                onClick={() => setViewingStudentId(student.id)}
+                                                                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 text-white hover:bg-[#BF0D3E] text-[10px] font-black uppercase tracking-widest transition-all mx-auto shadow-md"
+                                                            >
+                                                                <Icon name="user" size={14} /> Profil
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
                     </main>
                 </div>
             );
