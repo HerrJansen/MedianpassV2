@@ -2,62 +2,75 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lehrerkonsole | Medienpass Thomaeum</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lehrer-Konsole | Gymnasium Thomaeum</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script type="text/javascript" src="https://alcdn.msauth.net/browser/2.32.2/js/msal-browser.min.js"></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         :root { --thomaeum-red: #BF0D3E; }
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
         .spinner { border: 3px solid rgba(0,0,0,0.1); border-left-color: var(--thomaeum-red); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
     <div id="root"></div>
-
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
-        // ==========================================
-        // KONFIGURATION (Gymnasium Thomaeum)
-        // ==========================================
+        // --- KONFIGURATION ---
         const MS_CONFIG = {
             tenantId: "09c4bd58-1b8c-410d-930e-816015e61028",
             clientId: "7d277b19-93c1-4df7-8f1b-d38749b3d440",
             siteId: "thomaeumde.sharepoint.com,9ef17c4d-b57b-482e-9168-3cc3bc43bc3d,d600d53b-cfd0-45f7-96a5-f1ac20222f8f",
             listId: "08da02d9-5b67-4938-9d7e-9e9dee97fa2e",
-            teacherGroupId: "2bbe9733-7137-4d54-a788-e988c3d56cd9" 
+            teacherGroupId: "2bbe9733-7137-4d54-a788-e988c3d56cd9" // Entra ID Gruppe für Lehrer
         };
-        const THOMA_RED = "#BF0D3E";
 
         const msalConfig = {
             auth: {
                 clientId: MS_CONFIG.clientId,
                 authority: `https://login.microsoftonline.com/${MS_CONFIG.tenantId}`,
                 redirectUri: window.location.origin,
-                navigateToLoginRequestUrl: false
+                navigateToLoginRequestUrl: true
             },
             cache: { cacheLocation: "localStorage", storeAuthStateInCookie: true }
         };
         const msalInstance = new msal.PublicClientApplication(msalConfig);
         const msalInitPromise = msalInstance.initialize();
 
+        // --- NEUE 24 MODULE FÜR DIE LEHRER-APP ---
         const ALL_MODULES = [
-            { id: 1, title: "Hardware-Führerschein", stage: "5-6" }, { id: 2, title: "Dateimanagement", stage: "5-6" }, { id: 3, title: "Textverarbeitung I", stage: "5-6" },
-            { id: 4, title: "Netiquette", stage: "5-6" }, { id: 5, title: "Prävention", stage: "5-6" }, { id: 6, title: "Suchmaschinen", stage: "5-6" },
-            { id: 7, title: "Präsentationsprofi", stage: "7-8" }, { id: 8, title: "Medienproduktion", stage: "7-8" }, { id: 9, title: "Tabellenkalkulation", stage: "7-8" },
-            { id: 10, title: "Urheberrecht", stage: "7-8" }, { id: 11, title: "Quellenkritik", stage: "7-8" }, { id: 12, title: "Datenschutz", stage: "7-8" },
-            { id: 13, title: "KI-Produktivität", stage: "9-10" }, { id: 14, title: "Digitale Bewerbung", stage: "9-10" }, { id: 15, title: "Projektmanagement", stage: "9-10" },
-            { id: 16, title: "KI-Ethik", stage: "9-10" }, { id: 17, title: "Zivilcourage", stage: "9-10" }, { id: 18, title: "Digitaler Fußabdruck", stage: "9-10" }
+            { id: 1, title: "Hardware-Führerschein", stage: "5-6", category: "skills", icon: "monitor" },
+            { id: 2, title: "Dateimanagement", stage: "5-6", category: "skills", icon: "folder" },
+            { id: 3, title: "Umgang mit Word", stage: "5-6", category: "skills", icon: "file-text" },
+            { id: 7, title: "Präsentationsprofi", stage: "5-6", category: "skills", icon: "presentation" },
+            { id: 4, title: "Netiquette", stage: "5-6", category: "reflexion", icon: "message-square" },
+            { id: 5, title: "Prävention", stage: "5-6", category: "reflexion", icon: "shield-alert" },
+            { id: 6, title: "Suchmaschinen", stage: "5-6", category: "reflexion", icon: "search" },
+            { id: 19, title: "Sichere Passwörter", stage: "5-6", category: "reflexion", icon: "key" },
+            { id: 8, title: "Medienproduktion", stage: "7-8", category: "skills", icon: "video" },
+            { id: 9, title: "Tabellenkalkulation", stage: "7-8", category: "skills", icon: "table" },
+            { id: 20, title: "Bildbearbeitung", stage: "7-8", category: "skills", icon: "image" },
+            { id: 21, title: "Audio & Podcasts", stage: "7-8", category: "skills", icon: "mic" },
+            { id: 10, title: "Urheberrecht", stage: "7-8", category: "reflexion", icon: "copyright" },
+            { id: 11, title: "Quellenkritik", stage: "7-8", category: "reflexion", icon: "check-circle" },
+            { id: 12, title: "Datenschutz", stage: "7-8", category: "reflexion", icon: "lock" },
+            { id: 22, title: "Social Media Check", stage: "7-8", category: "reflexion", icon: "smartphone" },
+            { id: 13, title: "KI-Produktivität", stage: "9-10", category: "skills", icon: "cpu" },
+            { id: 14, title: "Digitale Bewerbung", stage: "9-10", category: "skills", icon: "briefcase" },
+            { id: 15, title: "Projektmanagement", stage: "9-10", category: "skills", icon: "kanban" },
+            { id: 23, title: "Webdesign Basics", stage: "9-10", category: "skills", icon: "globe" },
+            { id: 16, title: "KI-Ethik", stage: "9-10", category: "reflexion", icon: "scale" },
+            { id: 17, title: "Zivilcourage", stage: "9-10", category: "reflexion", icon: "users" },
+            { id: 18, title: "Digitaler Fußabdruck", stage: "9-10", category: "reflexion", icon: "footprint" },
+            { id: 24, title: "Datenökonomie", stage: "9-10", category: "reflexion", icon: "database" }
         ];
 
         const Icon = ({ name, size = 20, className = "" }) => {
@@ -67,139 +80,29 @@
                     setSvg(window.lucide.icons[name].toSvg({ width: size, height: size, class: className }));
                 }
             }, [name, size, className]);
-            return <span className="inline-flex items-center justify-center" dangerouslySetInnerHTML={{ __html: svg }} />;
-        };
-
-        // ==========================================
-        // KOMPONENTE: SCHÜLERANSICHT (Overlay)
-        // ==========================================
-        const StudentPreview = ({ student, onClose, onToggleModule, isUpdating }) => {
-            const [activeStage, setActiveStage] = useState("5-6");
-            const totalCompleted = student.completedTasks.length;
-            const progressPercent = Math.round((totalCompleted / 18) * 100);
-
-            return (
-                <div className="fixed inset-0 z-50 bg-slate-50 overflow-y-auto">
-                    {/* Header - Identisch zur Schüler-App */}
-                    <header className="bg-[#BF0D3E] text-white pt-12 pb-6 px-6 sm:px-8 shadow-md rounded-b-[2rem] sm:rounded-b-[3rem] relative z-10">
-                        <div className="max-w-4xl mx-auto flex justify-between items-start">
-                            <div>
-                                <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter mb-1">Ansicht: {student.vorname}</h1>
-                                <p className="text-red-200 font-bold text-sm sm:text-base opacity-90">Klasse {student.klasse} • Gymnasium Thomaeum</p>
-                            </div>
-                            <button onClick={onClose} className="bg-white/20 hover:bg-white/30 text-white p-3 rounded-xl transition-colors flex items-center gap-2 font-bold text-sm">
-                                <Icon name="x" size={20} /> Schließen
-                            </button>
-                        </div>
-                        
-                        {/* Fortschrittsbalken */}
-                        <div className="max-w-4xl mx-auto mt-8 bg-black/10 p-5 rounded-3xl backdrop-blur-sm">
-                            <div className="flex justify-between items-end mb-3">
-                                <span className="font-black uppercase tracking-widest text-xs sm:text-sm text-white">Gesamtfortschritt</span>
-                                <span className="font-black text-2xl sm:text-3xl text-white">{progressPercent}%</span>
-                            </div>
-                            <div className="h-4 bg-black/20 rounded-full overflow-hidden shadow-inner">
-                                <div className="h-full bg-white rounded-full transition-all duration-1000 ease-out" style={{ width: `${progressPercent}%` }}></div>
-                            </div>
-                            <p className="text-right mt-2 text-[10px] font-bold text-red-200 uppercase">{totalCompleted} von 18 Modulen geschafft</p>
-                        </div>
-                    </header>
-
-                    {/* Content / Module */}
-                    <main className="flex-grow max-w-4xl mx-auto w-full px-4 sm:px-8 mt-[-1rem] sm:mt-[-2rem] relative z-20 pb-10">
-                        <div className="flex gap-3 mb-2 overflow-x-auto pb-4 scrollbar-hide pt-4 sm:pt-6">
-                            {["5-6", "7-8", "9-10"].map(stage => (
-                                <button 
-                                    key={stage} 
-                                    onClick={() => setActiveStage(stage)} 
-                                    className={`px-6 py-3 rounded-2xl font-black transition-all whitespace-nowrap shadow-sm ${activeStage === stage ? 'text-white shadow-md scale-105' : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'}`} 
-                                    style={activeStage === stage ? { backgroundColor: THOMA_RED } : {}}
-                                >
-                                    Klasse {stage}
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                            {ALL_MODULES.filter(m => m.stage === activeStage).map(modul => {
-                                const isDone = student.completedTasks.includes(modul.id);
-                                const moduleData = student.moduleDates?.[modul.id];
-                                let dateDone = "—";
-                                let teacherName = "";
-                                if (moduleData) {
-                                    if (typeof moduleData === 'string') { dateDone = moduleData; }
-                                    else { dateDone = moduleData.datum || "—"; teacherName = moduleData.lehrer || ""; }
-                                }
-
-                                return (
-                                    <div 
-                                        key={modul.id} 
-                                        onClick={() => !isUpdating && onToggleModule(modul.id)}
-                                        title={isDone ? "Klicken zum Zurücksetzen" : "Klicken zum Freischalten"}
-                                        className={`bg-white rounded-3xl p-5 sm:p-6 border-2 transition-all cursor-pointer hover:-translate-y-1 ${isUpdating ? 'opacity-50 pointer-events-none' : ''} ${isDone ? 'border-green-400 shadow-green-100 shadow-lg' : 'border-slate-100 shadow-sm hover:border-blue-200'}`}
-                                    >
-                                        <div className="flex justify-between items-start mb-4">
-                                            <span className="text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 px-3 py-1 rounded-lg">Klasse {modul.stage}</span>
-                                            {isDone ? (
-                                                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white shadow-md transition-transform hover:scale-110">
-                                                    <Icon name="check" size={16} />
-                                                </div>
-                                            ) : (
-                                                <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 transition-transform hover:bg-blue-100 hover:text-blue-500">
-                                                    <Icon name="plus" size={14} />
-                                                </div>
-                                            )}
-                                        </div>
-                                        
-                                        <h3 className={`font-black text-lg sm:text-xl tracking-tight leading-tight mb-2 ${isDone ? 'text-slate-800' : 'text-slate-500'}`}>
-                                            {modul.title}
-                                        </h3>
-                                        
-                                        {isDone ? (
-                                            <div className="mt-3">
-                                                <p className="text-xs font-bold text-green-600 flex items-center gap-1">
-                                                    <Icon name="calendar-check" size={12} />
-                                                    Zertifiziert am {dateDone}
-                                                </p>
-                                                {teacherName && <p className="text-[10px] font-bold text-green-700 ml-4 mt-0.5">durch {teacherName}</p>}
-                                            </div>
-                                        ) : (
-                                            <p className="text-xs font-medium text-slate-400 mt-3">
-                                                Klicken zum Freischalten
-                                            </p>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </main>
-                </div>
-            );
+            return <span className={`inline-flex items-center justify-center ${className}`} dangerouslySetInnerHTML={{ __html: svg }} />;
         };
 
         const App = () => {
             const [user, setUser] = useState(null);
             const [students, setStudents] = useState([]);
             const [loading, setLoading] = useState(true);
-            const [authRequired, setAuthRequired] = useState(false);
-            const [accessDenied, setAccessDenied] = useState(false);
+            const [errorMsg, setErrorMsg] = useState("");
             const [debugMsg, setDebugMsg] = useState("");
             const [isUpdating, setIsUpdating] = useState(false);
 
+            // Filters
             const [searchName, setSearchName] = useState("");
-            const [filterKlasse, setFilterKlasse] = useState("ALL");
             const [filterJahrgang, setFilterJahrgang] = useState("ALL");
+            const [filterKlasse, setFilterKlasse] = useState("ALL");
             const [filterModul, setFilterModul] = useState("ALL");
-            
-            // NEU: Zustand für die Schüleransicht Overlay
             const [viewingStudentId, setViewingStudentId] = useState(null);
 
             useEffect(() => {
                 const bootstrap = async () => {
                     try {
-                        setDebugMsg("Lade MSAL...");
                         await msalInitPromise;
-                        const redirectResponse = await msalInstance.handleRedirectPromise();
+                        await msalInstance.handleRedirectPromise();
                         
                         let activeAccount = msalInstance.getActiveAccount();
                         if (!activeAccount && msalInstance.getAllAccounts().length > 0) {
@@ -208,297 +111,219 @@
                         }
 
                         if (activeAccount) {
-                            const isAuthorized = await verifyTeacherStatus(activeAccount);
-                            if (isAuthorized) {
-                                setUser({ name: activeAccount.name, username: activeAccount.username });
-                                fetchData(activeAccount);
-                            } else {
-                                setLoading(false);
-                            }
+                            setUser({ name: activeAccount.name, username: activeAccount.username });
+                            fetchStudents(activeAccount);
                         } else {
-                            setAuthRequired(true);
                             setLoading(false);
                         }
                     } catch (err) {
-                        setDebugMsg("Startfehler: " + err.message);
-                        setAuthRequired(true);
+                        console.error(err);
                         setLoading(false);
                     }
                 };
                 bootstrap();
             }, []);
 
-            const verifyTeacherStatus = async (account) => {
+            const handleLogin = () => {
                 setLoading(true);
-                setDebugMsg("Prüfe Gruppenzugehörigkeit (Entra ID)...");
-                try {
-                    const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["GroupMember.Read.All"], account });
-                    const url = `https://graph.microsoft.com/v1.0/me/memberOf`;
-                    const res = await fetch(url, { headers: { Authorization: `Bearer ${tokenRes.accessToken}` } });
-                    
-                    if (!res.ok) throw new Error("Graph API Gruppenabruf fehlgeschlagen");
-                    const data = await res.json();
-                    
-                    const isTeacher = data.value.some(group => group.id === MS_CONFIG.teacherGroupId);
-
-                    if (isTeacher) {
-                        setAccessDenied(false);
-                        return true;
-                    } else {
-                        setDebugMsg("Du bist nicht in der Lehrer-Sicherheitsgruppe eingetragen.");
-                        setAccessDenied(true);
-                        return false;
-                    }
-                } catch (error) {
-                    if (error.name === "InteractionRequiredAuthError") {
-                         setDebugMsg("Bitte logge dich erneut ein, um die neuen Berechtigungen zu akzeptieren.");
-                    } else {
-                         setDebugMsg("Fehler bei der Prüfung der Gruppenmitgliedschaft.");
-                    }
-                    setAccessDenied(true);
-                    return false;
-                }
+                msalInstance.loginRedirect({ scopes: ["Sites.ReadWrite.All", "GroupMember.Read.All"] });
             };
 
-            const handleLogin = async () => {
-                const tokenRequest = { scopes: ["Sites.ReadWrite.All", "GroupMember.Read.All"], prompt: "select_account" };
+            const handleLogout = () => {
+                msalInstance.logoutRedirect({ postLogoutRedirectUri: window.location.origin });
+            };
+
+            const fetchStudents = async (account) => {
                 try {
-                    const response = await msalInstance.loginPopup(tokenRequest);
-                    setLoading(true);
-                    msalInstance.setActiveAccount(response.account);
+                    const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["Sites.ReadWrite.All", "GroupMember.Read.All"], account });
                     
-                    const isAuthorized = await verifyTeacherStatus(response.account);
-                    if (isAuthorized) {
-                        setUser({ name: response.account.name, username: response.account.username });
-                        setAuthRequired(false);
-                        fetchData(response.account);
-                    } else {
+                    // Türsteher: Überprüfen, ob User ein Lehrer ist (Kommentiere es aus, wenn du nur testen willst)
+                    /*
+                    const groupRes = await fetch('https://graph.microsoft.com/v1.0/me/memberOf', { headers: { Authorization: `Bearer ${tokenRes.accessToken}` }});
+                    const groups = await groupRes.json();
+                    const isTeacher = groups.value?.some(g => g.id === MS_CONFIG.teacherGroupId);
+                    
+                    if (!isTeacher) {
+                        setErrorMsg("Zugriff verweigert. Du bist nicht als Lehrkraft autorisiert.");
                         setLoading(false);
+                        return;
                     }
-                } catch (error) {
-                    if (error.name === "BrowserAuthError" || error.message.includes("popup")) {
-                        msalInstance.loginRedirect(tokenRequest);
-                    }
-                }
-            };
+                    */
 
-            const handleLogout = () => msalInstance.logoutRedirect({ postLogoutRedirectUri: window.location.origin });
-
-            const fetchData = async (account) => {
-                setLoading(true);
-                setDebugMsg("Lade Schülerdaten aus SharePoint...");
-                try {
-                    const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["Sites.ReadWrite.All"], account });
                     const url = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${MS_CONFIG.listId}/items?$expand=fields&$top=999`;
-                    const res = await fetch(url, { headers: { Authorization: `Bearer ${tokenRes.accessToken}` }});
+                    const res = await fetch(url, { 
+                        headers: { 
+                            Authorization: `Bearer ${tokenRes.accessToken}`,
+                            Prefer: "HonorNonIndexedQueriesWarningMayFailRandomly"
+                        }
+                    });
                     
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    if (!res.ok) throw new Error("Fehler beim Abrufen der SharePoint-Daten.");
                     const data = await res.json();
                     
-                    const parsedStudents = data.value.map(item => {
+                    const loadedStudents = data.value.map(item => {
                         const f = item.fields;
                         const completedArray = f.Erledigte_Module ? f.Erledigte_Module.split(',').map(m => parseInt(m.trim())).filter(n => !isNaN(n)) : [];
-                        
                         let parsedDates = {};
                         if (f.Modul_Daten) {
                             try { parsedDates = JSON.parse(f.Modul_Daten); } catch(e) {}
                         }
-
                         return {
                             id: item.id,
                             email: f.Title || "",
                             vorname: f.Vorname || "",
                             nachname: f.Nachname || "",
-                            klasse: f.Klasse || "Unbekannt",
+                            klasse: f.Klasse || "",
                             completedTasks: completedArray,
-                            moduleDates: parsedDates 
+                            moduleDates: parsedDates
                         };
-                    });
-                    
-                    parsedStudents.sort((a, b) => a.nachname.localeCompare(b.nachname));
-                    setStudents(parsedStudents);
-                    setDebugMsg("");
+                    }).filter(s => s.vorname && s.nachname);
+
+                    setStudents(loadedStudents.sort((a,b) => a.nachname.localeCompare(b.nachname)));
                 } catch (error) {
-                    setDebugMsg("Fehler beim Laden (Fehlende Rechte?).");
-                    setAuthRequired(true);
+                    if (error.name === "InteractionRequiredAuthError") {
+                        msalInstance.loginRedirect({ scopes: ["Sites.ReadWrite.All", "GroupMember.Read.All"] });
+                    } else {
+                        setErrorMsg("Fehler beim Laden der Daten.");
+                    }
                 } finally {
                     setLoading(false);
                 }
             };
 
+            const getTodayString = () => {
+                const d = new Date();
+                return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth()+1).toString().padStart(2, '0')}.${d.getFullYear()}`;
+            };
+
+            const updateStudentInSharePoint = async (studentId, newTasks, newDates) => {
+                const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["Sites.ReadWrite.All"], account: msalInstance.getActiveAccount() });
+                const url = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${MS_CONFIG.listId}/items/${studentId}/fields`;
+                
+                const payload = {
+                    Erledigte_Module: newTasks.join(", "),
+                    Modul_Daten: JSON.stringify(newDates)
+                };
+
+                await fetch(url, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${tokenRes.accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+            };
+
             const toggleModuleSingle = async (studentId, moduleId) => {
                 if (isUpdating) return;
                 setIsUpdating(true);
-                
+                setDebugMsg("");
+
                 try {
                     const student = students.find(s => s.id === studentId);
                     const isDone = student.completedTasks.includes(moduleId);
                     
-                    const newTasks = isDone 
-                        ? student.completedTasks.filter(id => id !== moduleId) 
-                        : [...student.completedTasks, moduleId];
-                    
-                    let newDates = { ...student.moduleDates };
+                    let newTasks, newDates;
                     if (isDone) {
-                        delete newDates[moduleId]; 
+                        newTasks = student.completedTasks.filter(id => id !== moduleId);
+                        newDates = { ...student.moduleDates };
+                        delete newDates[moduleId];
                     } else {
-                        newDates[moduleId] = { datum: new Date().toLocaleDateString('de-DE'), lehrer: user.name }; 
+                        newTasks = [...student.completedTasks, moduleId];
+                        newDates = { ...student.moduleDates, [moduleId]: { datum: getTodayString(), lehrer: user.name } };
                     }
+
+                    await updateStudentInSharePoint(studentId, newTasks, newDates);
                     
-                    await updateSharePoint(studentId, newTasks, newDates);
-                    
-                    setStudents(prev => prev.map(s => s.id === studentId ? { ...s, completedTasks: newTasks, moduleDates: newDates } : s));
+                    setStudents(students.map(s => s.id === studentId ? { ...s, completedTasks: newTasks, moduleDates: newDates } : s));
+                    setDebugMsg(`Erfolgreich aktualisiert.`);
                 } catch (err) {
-                    alert(err.message);
+                    setDebugMsg("Fehler beim Speichern!");
+                    console.error(err);
                 } finally {
                     setIsUpdating(false);
+                    setTimeout(() => setDebugMsg(""), 3000);
                 }
             };
 
             const bulkToggle = async (action) => {
-                if (filterModul === "ALL" || isUpdating) {
-                    alert("Bitte wähle zuerst oben rechts im Filter ein spezifisches Modul aus.");
-                    return;
-                }
-                
-                const moduleId = parseInt(filterModul);
-                const studentsToUpdate = filteredStudents.filter(s => {
-                    const hasMod = s.completedTasks.includes(moduleId);
-                    return action === "grant" ? !hasMod : hasMod;
-                });
-
-                if (studentsToUpdate.length === 0) {
-                    alert("Alle angezeigten Schüler haben diesen Status bereits.");
-                    return;
-                }
-
-                if (!confirm(`Möchtest du Modul ${moduleId} für ${studentsToUpdate.length} Schüler ${action === 'grant' ? 'freischalten' : 'zurücksetzen'}?`)) return;
-
+                if (isUpdating || filterModul === "ALL" || filteredStudents.length === 0) return;
                 setIsUpdating(true);
-                setDebugMsg(`Aktualisiere ${studentsToUpdate.length} Schüler... Bitte warten.`);
+                setDebugMsg("Starte Massen-Update...");
 
-                try {
-                    const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["Sites.ReadWrite.All"], account: msalInstance.getActiveAccount() });
-                    const today = new Date().toLocaleDateString('de-DE');
+                const mId = parseInt(filterModul);
+                let successCount = 0;
 
-                    const updatePromises = studentsToUpdate.map(async (student) => {
-                        let newTasks = action === "grant" 
-                            ? [...student.completedTasks, moduleId] 
-                            : student.completedTasks.filter(id => id !== moduleId);
-                        
-                        let newDates = { ...student.moduleDates };
-                        if (action === "grant") {
-                            newDates[moduleId] = { datum: today, lehrer: user.name };
+                for (const student of filteredStudents) {
+                    const isDone = student.completedTasks.includes(mId);
+                    if ((action === 'grant' && !isDone) || (action === 'revoke' && isDone)) {
+                        let newTasks, newDates;
+                        if (action === 'grant') {
+                            newTasks = [...student.completedTasks, mId];
+                            newDates = { ...student.moduleDates, [mId]: { datum: getTodayString(), lehrer: user.name } };
                         } else {
-                            delete newDates[moduleId];
+                            newTasks = student.completedTasks.filter(id => id !== mId);
+                            newDates = { ...student.moduleDates };
+                            delete newDates[mId];
                         }
                         
-                        const url = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${MS_CONFIG.listId}/items/${student.id}/fields`;
-                        const res = await fetch(url, {
-                            method: 'PATCH',
-                            headers: { 'Authorization': `Bearer ${tokenRes.accessToken}`, 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                "Erledigte_Module": newTasks.join(', '),
-                                "Modul_Daten": JSON.stringify(newDates)
-                            })
-                        });
-                        
-                        if (!res.ok) {
-                            const errData = await res.json();
-                            if (errData.error?.code === "accessDenied" || errData.error?.message?.includes("Access denied")) {
-                                throw new Error("ZUGRIFF VERWEIGERT!\n\n1. Bitte klicke oben rechts auf 'Abmelden' und logge dich neu ein.\n2. Prüfe in Azure, ob der App 'Sites.ReadWrite.All' zugestimmt wurde.");
-                            }
-                            throw new Error(`Graph API Fehler: ${errData.error?.message || res.statusText}`);
+                        try {
+                            await updateStudentInSharePoint(student.id, newTasks, newDates);
+                            setStudents(prev => prev.map(s => s.id === student.id ? { ...s, completedTasks: newTasks, moduleDates: newDates } : s));
+                            successCount++;
+                        } catch(e) {
+                            console.error(`Fehler bei Schüler ${student.nachname}`);
                         }
-                        
-                        return { id: student.id, tasks: newTasks, dates: newDates };
-                    });
-
-                    const results = await Promise.all(updatePromises);
-                    
-                    setStudents(prev => prev.map(s => {
-                        const updatedInfo = results.find(r => r.id === s.id);
-                        return updatedInfo ? { ...s, completedTasks: updatedInfo.tasks, moduleDates: updatedInfo.dates } : s;
-                    }));
-                    
-                    setDebugMsg("Massen-Update erfolgreich!");
-                    setTimeout(() => setDebugMsg(""), 3000);
-                } catch (err) {
-                    alert(err.message);
-                } finally {
-                    setIsUpdating(false);
-                }
-            };
-
-            const updateSharePoint = async (itemId, tasksArray, datesObj) => {
-                const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["Sites.ReadWrite.All"], account: msalInstance.getActiveAccount() });
-                const url = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${MS_CONFIG.listId}/items/${itemId}/fields`;
-                
-                const res = await fetch(url, {
-                    method: 'PATCH',
-                    headers: { 'Authorization': `Bearer ${tokenRes.accessToken}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        "Erledigte_Module": tasksArray.join(', '),
-                        "Modul_Daten": JSON.stringify(datesObj)
-                    })
-                });
-                
-                if (!res.ok) {
-                    const errData = await res.json();
-                    if (errData.error?.code === "accessDenied" || errData.error?.message?.includes("Access denied")) {
-                        throw new Error("ZUGRIFF VERWEIGERT!\n\n1. Bitte klicke oben rechts auf 'Abmelden' und logge dich neu ein.\n2. Prüfe in Azure, ob der App 'Sites.ReadWrite.All' zugestimmt wurde.");
                     }
-                    throw new Error(`Graph API Fehler:\n${errData.error?.message || res.statusText}`);
                 }
+
+                setIsUpdating(false);
+                setDebugMsg(`${successCount} Schüler aktualisiert.`);
+                setTimeout(() => setDebugMsg(""), 3000);
             };
 
-            const uniqueKlassen = useMemo(() => [...new Set(students.map(s => s.klasse))].sort(), [students]);
+            // Filter Logic
+            const uniqueKlassen = useMemo(() => [...new Set(students.map(s => s.klasse))].filter(k => k).sort(), [students]);
             const uniqueJahrgaenge = useMemo(() => {
-                const j = students.map(s => s.klasse.match(/\d+/)?.[0]).filter(Boolean);
-                return [...new Set(j)].sort((a,b) => parseInt(a) - parseInt(b));
-            }, [students]);
-
-            const filteredStudents = useMemo(() => {
-                return students.filter(s => {
-                    const searchMatch = `${s.vorname} ${s.nachname}`.toLowerCase().includes(searchName.toLowerCase());
-                    const klasseMatch = filterKlasse === "ALL" || s.klasse === filterKlasse;
-                    const jg = s.klasse.match(/\d+/)?.[0];
-                    const jahrgangMatch = filterJahrgang === "ALL" || jg === filterJahrgang;
-                    return searchMatch && klasseMatch && jahrgangMatch;
+                const jgs = new Set();
+                uniqueKlassen.forEach(k => {
+                    const match = k.match(/^(\d+)/);
+                    if (match) jgs.add(match[1]);
                 });
-            }, [students, searchName, filterKlasse, filterJahrgang]);
+                return [...jgs].sort((a,b) => parseInt(a) - parseInt(b));
+            }, [uniqueKlassen]);
 
-            const hasActiveFilters = searchName.trim() !== "" || filterJahrgang !== "ALL" || filterKlasse !== "ALL" || filterModul !== "ALL";
-
-            if (accessDenied) {
-                return (
-                    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6 relative">
-                        {debugMsg && <div className="absolute top-0 left-0 w-full text-center py-2 text-xs font-bold bg-slate-800 text-white shadow-md">SYSTEM-STATUS: {debugMsg}</div>}
-                        <div className="bg-white p-10 rounded-[3rem] shadow-2xl max-w-md w-full text-center border border-red-100">
-                            <div className="mx-auto w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6 text-red-600">
-                                <Icon name="shield-alert" size={48} />
-                            </div>
-                            <h2 className="text-2xl font-black mb-4 uppercase tracking-tighter text-slate-800">Zugriff verweigert</h2>
-                            <p className="text-slate-500 mb-8 font-medium">Dein Konto ist nicht in der Gruppe <b>"LehrerPlusReferendare"</b> eingetragen. Diese App ist ausschließlich für das berechtigte Kollegium freigegeben.</p>
-                            <button onClick={handleLogout} className="w-full bg-slate-100 text-slate-600 hover:bg-slate-200 font-black uppercase px-8 py-4 rounded-2xl transition-all shadow-sm">
-                                Abmelden / Zurück
-                            </button>
-                        </div>
-                    </div>
-                );
+            let filteredStudents = students;
+            if (searchName) {
+                const sLower = searchName.toLowerCase();
+                filteredStudents = filteredStudents.filter(s => s.vorname.toLowerCase().includes(sLower) || s.nachname.toLowerCase().includes(sLower));
+            }
+            if (filterJahrgang !== "ALL") {
+                filteredStudents = filteredStudents.filter(s => s.klasse.startsWith(filterJahrgang));
+            }
+            if (filterKlasse !== "ALL") {
+                filteredStudents = filteredStudents.filter(s => s.klasse === filterKlasse);
             }
 
-            if (authRequired) {
+            const hasActiveFilters = searchName || filterJahrgang !== "ALL" || filterKlasse !== "ALL" || filterModul !== "ALL";
+            const currentViewingStudent = students.find(s => s.id === viewingStudentId);
+
+            if (loading) {
+                return <div className="min-h-screen flex items-center justify-center"><div className="spinner"></div></div>;
+            }
+
+            if (!user) {
                 return (
-                    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6 relative">
-                        {debugMsg && <div className="absolute top-0 left-0 w-full text-center py-2 text-xs font-bold bg-slate-800 text-white shadow-md">SYSTEM-STATUS: {debugMsg}</div>}
-                        <div className="bg-white p-10 rounded-[3rem] shadow-2xl max-w-md w-full text-center border">
-                            <div className="mx-auto w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6 text-red-600">
-                                <Icon name="lock" size={48} />
+                    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+                        <div className="bg-white max-w-md w-full rounded-[2.5rem] shadow-2xl p-10 text-center border border-slate-100">
+                            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 text-[#BF0D3E]">
+                                <Icon name="graduation-cap" size={40} />
                             </div>
-                            <h2 className="text-2xl font-black mb-4 uppercase tracking-tighter text-slate-800">Lehrer-Login</h2>
-                            <p className="text-slate-500 mb-6 font-medium">Bitte logge dich mit deinem Office 365 Schulkonto ein, um Schülerdaten zu verwalten.</p>
-                            <button onClick={handleLogin} className="w-full text-white font-black uppercase px-8 py-4 rounded-2xl transition-all shadow-lg hover:scale-105 active:scale-95 mb-6" style={{ backgroundColor: THOMA_RED }}>
+                            <h1 className="text-3xl font-black text-slate-800 mb-2">Lehrer-Konsole</h1>
+                            <p className="text-slate-500 mb-8 font-medium">Gymnasium Thomaeum</p>
+                            {errorMsg && <p className="text-red-600 text-sm mb-6 bg-red-50 p-3 rounded-xl">{errorMsg}</p>}
+                            <button onClick={handleLogin} className="w-full bg-[#BF0D3E] hover:bg-red-800 text-white font-bold py-4 rounded-2xl transition-all shadow-lg">
                                 Mit Microsoft verbinden
                             </button>
                         </div>
@@ -506,59 +331,73 @@
                 );
             }
 
-            if (loading) {
-                return (
-                    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-                        <div className="spinner mb-4"></div>
-                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{debugMsg || "Lade System..."}</p>
-                    </div>
-                );
-            }
-
-            // Hole immer die frischen Daten des aktuell betrachteten Schülers
-            const currentViewingStudent = viewingStudentId ? students.find(s => s.id === viewingStudentId) : null;
-
             return (
-                <div className="min-h-screen flex flex-col bg-slate-50 font-sans selection:bg-red-100 relative">
-                    {/* OVERLAY: SCHÜLERANSICHT */}
+                <div className="min-h-screen bg-slate-50 font-sans flex flex-col">
+                    
+                    {/* STUDENT PROFIL MODAL */}
                     {currentViewingStudent && (
-                        <StudentPreview 
-                            student={currentViewingStudent} 
-                            onClose={() => setViewingStudentId(null)} 
-                            onToggleModule={(moduleId) => toggleModuleSingle(currentViewingStudent.id, moduleId)}
-                            isUpdating={isUpdating}
-                        />
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                            <div className="bg-white rounded-[2.5rem] w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+                                <div className="bg-slate-800 text-white p-6 flex justify-between items-center shrink-0">
+                                    <div>
+                                        <p className="text-slate-300 text-xs font-black uppercase tracking-widest mb-1">Schülerprofil</p>
+                                        <h2 className="text-2xl font-black">{currentViewingStudent.nachname}, {currentViewingStudent.vorname}</h2>
+                                    </div>
+                                    <button onClick={() => setViewingStudentId(null)} className="bg-white/20 p-2 rounded-full hover:bg-white/30 transition-colors">
+                                        <Icon name="x" size={24} />
+                                    </button>
+                                </div>
+                                <div className="p-6 overflow-y-auto">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                        {ALL_MODULES.map(modul => {
+                                            const isDone = currentViewingStudent.completedTasks.includes(modul.id);
+                                            return (
+                                                <button 
+                                                    key={modul.id}
+                                                    disabled={isUpdating}
+                                                    onClick={() => toggleModuleSingle(currentViewingStudent.id, modul.id)}
+                                                    className={`p-4 rounded-2xl border-2 text-left transition-all flex flex-col h-full ${isDone ? 'bg-green-50 border-green-500 shadow-sm' : 'bg-white border-slate-100 hover:border-slate-300'}`}
+                                                >
+                                                    <div className="flex justify-between items-start mb-2 w-full">
+                                                        <Icon name={modul.icon} size={24} className={isDone ? 'text-green-600' : 'text-slate-400'} />
+                                                        {isDone ? <Icon name="check-circle-2" size={20} className="text-green-500" /> : <Icon name="circle" size={20} className="text-slate-200" />}
+                                                    </div>
+                                                    <div className="text-[10px] font-bold text-slate-400 uppercase mt-auto pt-2">{modul.stage}</div>
+                                                    <div className={`font-bold text-sm leading-tight mt-1 ${isDone ? 'text-green-900' : 'text-slate-700'}`}>{modul.title}</div>
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     )}
 
-                    {/* NEUER HEADER (Im Design der Schüler-App) */}
+                    {/* HEADER */}
                     <header className="bg-[#BF0D3E] text-white pt-10 pb-16 px-6 sm:px-8 shadow-md rounded-b-[2rem] sm:rounded-b-[3rem] relative z-10">
                         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                             <div className="flex items-center gap-4">
-                                <div className="p-3 bg-white/20 rounded-2xl shadow-inner backdrop-blur-sm">
-                                    <Icon name="graduation-cap" size={32} className="text-white" />
+                                <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
+                                    <Icon name="graduation-cap" size={32} />
                                 </div>
                                 <div>
                                     <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tighter mb-1">Lehrer-Konsole</h1>
-                                    <p className="text-red-200 font-bold text-sm sm:text-base opacity-90">Gymnasium Thomaeum</p>
+                                    <p className="text-red-200 font-bold text-sm">Gymnasium Thomaeum</p>
                                 </div>
                             </div>
-                            <div className="flex flex-col items-start sm:items-end gap-3 w-full sm:w-auto">
-                                <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                                    {isUpdating && <div className="flex items-center gap-2 text-[10px] font-black tracking-widest uppercase text-white bg-black/20 px-3 py-1.5 rounded-full"><div className="spinner border-white !w-3 !h-3" style={{ borderTopColor: 'transparent' }}></div> Speichert...</div>}
-                                    <button onClick={handleLogout} className="flex items-center justify-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl transition-all shadow-sm active:scale-95 border border-white/20 w-full sm:w-auto" title="Abmelden">
-                                        <Icon name="log-out" size={18} />
-                                        <span className="font-bold uppercase tracking-wider text-xs">Abmelden</span>
-                                    </button>
+                            <div className="flex items-center gap-4">
+                                <div className="text-right hidden sm:block">
+                                    <p className="text-[10px] font-black text-green-300 uppercase tracking-widest mb-0.5 flex items-center justify-end gap-1"><Icon name="shield-check" size={12}/> Verbunden</p>
+                                    <p className="text-sm font-bold">{user.name}</p>
                                 </div>
-                                <div className="text-left sm:text-right hidden sm:block">
-                                    <p className="text-[10px] font-black text-green-300 uppercase tracking-widest mb-0.5 flex items-center justify-start sm:justify-end gap-1"><Icon name="shield-check" size={12}/> Verbunden als</p>
-                                    <p className="text-sm font-bold text-white">{user?.name || "Lehrkraft"}</p>
-                                </div>
+                                <button onClick={handleLogout} className="bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl font-bold uppercase text-xs tracking-wider transition-all flex items-center gap-2">
+                                    <Icon name="log-out" size={16} /> Abmelden
+                                </button>
                             </div>
                         </div>
                     </header>
 
-                    {/* FILTER LEISTE (Als schwebende Karte wie in der Schüler-App) */}
+                    {/* SCHWEBENDE FILTER-KARTE */}
                     <div className="max-w-7xl mx-auto w-full px-4 sm:px-8 -mt-8 relative z-30 mb-8">
                         <div className="bg-white shadow-xl rounded-[2rem] p-5 sm:p-6 border border-slate-100 flex flex-col gap-4">
                             <div className="flex flex-wrap gap-4 items-center">
@@ -574,12 +413,12 @@
 
                                 <select className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-[#BF0D3E] cursor-pointer transition-all" value={filterKlasse} onChange={e => setFilterKlasse(e.target.value)}>
                                     <option value="ALL">Alle Klassen</option>
-                                    {uniqueKlassen.filter(k => filterJahrgang === "ALL" || k.includes(filterJahrgang)).map(k => <option key={k} value={k}>Klasse {k}</option>)}
+                                    {uniqueKlassen.filter(k => filterJahrgang === "ALL" || k.startsWith(filterJahrgang)).map(k => <option key={k} value={k}>Klasse {k}</option>)}
                                 </select>
 
                                 <select className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-[#BF0D3E] cursor-pointer transition-all" value={filterModul} onChange={e => setFilterModul(e.target.value)}>
                                     <option value="ALL">Modul auswählen...</option>
-                                    {ALL_MODULES.map(m => <option key={m.id} value={m.id}>Modul {m.id}: {m.title}</option>)}
+                                    {ALL_MODULES.map(m => <option key={m.id} value={m.id}>Modul {m.id}: {m.title} ({m.stage})</option>)}
                                 </select>
                             </div>
                             
@@ -591,7 +430,7 @@
                                     </div>
                                     <div className="flex gap-2 w-full sm:w-auto">
                                         <button disabled={isUpdating} onClick={() => bulkToggle('revoke')} className="flex-1 sm:flex-none bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 px-5 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all">Alle zurücksetzen</button>
-                                        <button disabled={isUpdating} onClick={() => bulkToggle('grant')} className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-md hover:shadow-lg active:scale-95">Alle freischalten</button>
+                                        <button disabled={isUpdating} onClick={() => bulkToggle('grant')} className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-md active:scale-95">Alle freischalten</button>
                                     </div>
                                 </div>
                             )}
@@ -599,6 +438,7 @@
                         </div>
                     </div>
 
+                    {/* HAUPTBEREICH: TABELLE */}
                     <main className="max-w-7xl mx-auto w-full px-4 sm:px-8 flex-grow pb-12">
                         {!hasActiveFilters ? (
                             <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-12 text-center flex flex-col items-center justify-center min-h-[400px]">
@@ -606,10 +446,10 @@
                                     <Icon name="filter" size={48} />
                                 </div>
                                 <h2 className="text-3xl font-black text-slate-800 mb-3 tracking-tighter">Bereit für die Eingabe</h2>
-                                <p className="text-slate-500 max-w-md font-medium text-lg leading-relaxed">Die Schülerdaten wurden erfolgreich geladen. Nutze die Filter oben (z.B. nach Klasse oder Modul), um eine Auswahl anzuzeigen.</p>
+                                <p className="text-slate-500 max-w-md font-medium text-lg leading-relaxed">Nutze die Filter oben (z.B. nach Klasse oder Modul), um eine Auswahl anzuzeigen.</p>
                             </div>
                         ) : (
-                            <div className="bg-white rounded-[2.5rem] shadow-lg border border-slate-100 overflow-hidden animate-in fade-in duration-300">
+                            <div className="bg-white rounded-[2.5rem] shadow-lg border border-slate-100 overflow-hidden">
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left border-collapse min-w-[600px]">
                                         <thead>
@@ -625,13 +465,13 @@
                                         </thead>
                                         <tbody>
                                             {filteredStudents.length === 0 ? (
-                                                <tr><td colSpan="5" className="p-12 text-center text-slate-400 font-bold text-lg">Keine Schüler für diesen Filter gefunden.</td></tr>
+                                                <tr><td colSpan="5" className="p-12 text-center text-slate-400 font-bold text-lg">Keine Schüler gefunden.</td></tr>
                                             ) : filteredStudents.map(student => {
-                                                const totalProgress = Math.round((student.completedTasks.length / 18) * 100);
+                                                const totalProgress = Math.round((student.completedTasks.length / ALL_MODULES.length) * 100);
                                                 const isModulDone = filterModul !== "ALL" && student.completedTasks.includes(parseInt(filterModul));
 
                                                 return (
-                                                    <tr key={student.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors group">
+                                                    <tr key={student.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
                                                         <td className="p-5 pl-8 font-black text-slate-800 text-lg">{student.nachname || "-"}</td>
                                                         <td className="p-5 font-semibold text-slate-600">{student.vorname || "-"}</td>
                                                         <td className="p-5">
@@ -649,8 +489,7 @@
                                                                 <button 
                                                                     disabled={isUpdating}
                                                                     onClick={() => toggleModuleSingle(student.id, parseInt(filterModul))}
-                                                                    className={`w-10 h-10 rounded-xl flex items-center justify-center mx-auto transition-all transform hover:scale-110 active:scale-95 ${isModulDone ? 'bg-green-500 text-white shadow-lg shadow-green-200 hover:bg-red-500 hover:shadow-red-200' : 'bg-slate-100 text-slate-300 hover:bg-green-500 hover:text-white'}`}
-                                                                    title={isModulDone ? "Klicken zum Zurücksetzen" : "Klicken zum Freischalten"}
+                                                                    className={`w-10 h-10 rounded-xl flex items-center justify-center mx-auto transition-all transform hover:scale-110 active:scale-95 ${isModulDone ? 'bg-green-500 text-white shadow-lg shadow-green-200' : 'bg-slate-100 text-slate-300 hover:bg-green-500 hover:text-white'}`}
                                                                 >
                                                                     <Icon name={isModulDone ? "check" : "circle"} size={20} />
                                                                 </button>
@@ -659,11 +498,9 @@
                                                         <td className="p-5 text-center">
                                                             <button 
                                                                 onClick={() => setViewingStudentId(student.id)}
-                                                                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 text-white hover:bg-[#BF0D3E] text-[10px] font-black uppercase tracking-widest transition-all mx-auto shadow-md hover:shadow-lg hover:-translate-y-0.5"
-                                                                title="Detailansicht des Schülers öffnen"
+                                                                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 text-white hover:bg-[#BF0D3E] text-[10px] font-black uppercase tracking-widest transition-all mx-auto shadow-md"
                                                             >
-                                                                <Icon name="user" size={14} />
-                                                                Profil
+                                                                <Icon name="user" size={14} /> Profil
                                                             </button>
                                                         </td>
                                                     </tr>
