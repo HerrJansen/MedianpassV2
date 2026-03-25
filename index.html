@@ -91,7 +91,8 @@
                 setIsAuthenticating(true);
                 setErrorMsg("");
                 try {
-                    const loginResponse = await msalInstance.loginPopup({ scopes: ["user.read", "Sites.Read.All"] });
+                    // WICHTIG: Hier nach Sites.ReadWrite.All fragen, da dies in Azure bewilligt wurde!
+                    const loginResponse = await msalInstance.loginPopup({ scopes: ["user.read", "Sites.ReadWrite.All"] });
                     setUser({ name: loginResponse.account.name, email: loginResponse.account.username });
                     await fetchStudentData(loginResponse.account.username);
                 } catch (err) {
@@ -110,8 +111,10 @@
             // DATEN AUS SHAREPOINT ABRUFEN
             const fetchStudentData = async (email) => {
                 try {
-                    const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["Sites.Read.All"], account: msalInstance.getActiveAccount() });
-                    const url = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${MS_CONFIG.listId}/items?$filter=fields/Title eq '${email}'&$expand=fields`;
+                    const tokenRes = await msalInstance.acquireTokenSilent({ scopes: ["Sites.ReadWrite.All"], account: msalInstance.getActiveAccount() });
+                    
+                    // URL für Microsoft Graph
+                    const url = `https://graph.microsoft.com/v1.0/sites/${MS_CONFIG.siteId}/lists/${MS_CONFIG.listId}/items?$expand=fields&$filter=fields/Title eq '${email}'`;
                     
                     const response = await fetch(url, { 
                         headers: { 
@@ -121,7 +124,12 @@
                         } 
                     });
                     
-                    if (!response.ok) throw new Error("API-Antwort war nicht OK");
+                    // ECHTES ERROR-HANDLING
+                    if (!response.ok) {
+                        const errorDetails = await response.text();
+                        console.error("Graph API Error Details:", errorDetails);
+                        throw new Error(`Microsoft-Fehler ${response.status}: Die Verbindung zur SharePoint-Liste schlug fehl.`);
+                    }
                     
                     const data = await response.json();
 
@@ -140,7 +148,8 @@
                     }
                 } catch (err) {
                     console.error("Fetch Error:", err);
-                    setErrorMsg("Konnte keine Daten abrufen. Bist du mit dem Internet verbunden?");
+                    // Zeigt den echten Fehler an statt der generischen Internet-Meldung
+                    setErrorMsg(err.message.includes("Microsoft-Fehler") ? err.message : "Es gab ein Problem beim Abrufen der Daten.");
                 } finally {
                     setIsAuthenticating(false);
                 }
