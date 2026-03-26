@@ -114,16 +114,25 @@
             },
             2: {
                 sections: [
-                    { title: "1. Technische Bedienung", intro: "Wer Ordnung hält, ist nur zu faul zum Suchen! Stell dir deinen Computer wie einen riesigen digitalen Rucksack vor.", blocks: [
-                        { type: 'standard', title: 'Ordner erstellen & füllen', text: 'Klicke mit der rechten Maustaste auf eine leere Fläche und wähle **Neu > Ordner**. Um eine Datei dorthin zu verschieben, klickst du sie an, hältst die linke Maustaste gedrückt und ziehst sie auf den Ordner (Das nennt man **Drag & Drop**).' },
-                        { type: 'tip', title: 'Die Schul-Cloud (OneDrive)', text: 'Speichere wichtige Schulsachen nicht nur auf dem Desktop, sondern in der Cloud (bei uns OneDrive). So kannst du auch von zu Hause oder vom Handy aus auf deine Hausaufgaben zugreifen und sie gehen nicht verloren, wenn dein Gerät kaputt geht.' }
+                    { title: "1. Technische Bedienung", intro: "Dein Windows-Computer ist wie ein riesiges Kinderzimmer. Wenn du deine Sachen einfach auf den Boden wirfst, findest du nie etwas wieder. Hier sind deine Werkzeuge für perfekte Ordnung:", blocks: [
+                        { type: 'info', title: 'Deine Kommandozentrale', text: 'Das wichtigste Programm auf deinem PC heißt **Windows Explorer**. Er zeigt dir alle Ordner an wie die Äste an einem Baum. Tastatur-Trick: `Win` + `E` öffnet ihn blitzschnell!' },
+                        { type: 'standard', title: 'Festplatte vs. Schul-Cloud', text: 'Nicht jeder Speicherort ist gleich! **Lokal (Dieser PC):** Meistens das Laufwerk `C:\\`. Die Datei liegt nur auf diesem Computer. **OneDrive (Cloud):** Ein Tresor im Internet! Du kannst von der Schule oder von zu Hause zugreifen. Ideal für Hausaufgaben!' },
+                        { type: 'warning', title: 'Die Geheimsprache der Dateien', text: 'Jeder Dateiname hat am Ende einen Punkt und kleine Buchstaben (z.B. `.docx`, `.pdf`, `.jpg`). Das ist das Format. **Lösche diese Endung beim Umbenennen niemals!** Sonst "vergisst" der Computer, was für eine Datei das ist, und sie wird unbrauchbar.' },
+                        { type: 'tip', title: 'Drag & Drop: Die Maus-Falle', text: 'Wenn du eine Datei mit der Maus ziehst, wird sie manchmal verschoben, manchmal kopiert (z.B. auf USB-Sticks). Nutze lieber die sicheren Tricks der Profis:<br>`Strg` + `C` (Kopieren)<br>`Strg` + `X` (Ausschneiden / Verschieben)<br>`Strg` + `V` (Einfügen).' },
+                        { type: 'success', title: 'Der Papierkorb', text: 'Wenn du auf einer Datei die `Entf` Taste drückst, ist sie nicht wirklich gelöscht! Windows verschiebt sie nur in den Papierkorb. Erst wenn du einen Rechtsklick darauf machst und **"Papierkorb leeren"** wählst, wird der Platz auf der Festplatte wieder frei.' }
                     ]},
-                    { title: "2. Kriterien für Qualität", intro: "Eine gute Ordnerstruktur rettet dir am Abend vor der Klassenarbeit das Leben.", blocks: [
-                        { type: 'info', title: 'Sinnvolle Dateinamen', text: 'Nenne deine Dateien niemals einfach nur `Dokument1.docx` oder `asdf.pdf`. Ein perfekter Dateiname verrät dir sofort, was drin ist. Besser: `2026-Deutsch-Referat-Goethe.docx`.' },
-                        { type: 'success', title: 'Das Fächer-System', text: 'Lege dir einen Hauptordner namens **Schule** an. Darin erstellst du für jedes Fach (Mathe, Deutsch, Bio) einen eigenen Unterordner. Wirf nicht alles durcheinander!' }
+                    { title: "2. Kriterien für Qualität", intro: "Eine clevere Ordnerstruktur und perfekte Dateinamen retten dir am Abend vor der Klassenarbeit das Leben.", blocks: [
+                        { type: 'warning', title: 'Die Kunst der Dateinamen', text: 'Nenne deine Datei niemals einfach nur `asdf.docx` oder `Unbenannt.pdf`. Wenn du das machst, findest du sie nächste Woche garantiert nicht mehr wieder!' },
+                        { type: 'success', title: 'Die 3 goldenen Namens-Regeln', text: '**1. Sei genau:** Schreibe Fach und Thema hinein (z.B. `Deutsch_Referat.docx`).<br><br>**2. Das Datum:** Profis schreiben das Datum umgekehrt an den Anfang (`2026-03-26_...`), damit Dateien sich automatisch im Ordner sortieren.<br><br>**3. Verbotene Zeichen:** Vermeide Sonderzeichen wie `? / \\ * : < > |` im Namen. Der Computer kommt damit nicht klar!' }
                     ]}
                 ],
-                missions: ["Erstelle auf deinem Desktop einen neuen Hauptordner und nenne ihn 'Schule'.", "Erstelle innerhalb des Ordners 'Schule' drei Unterordner für deine heutigen Unterrichtsfächer.", "Benenne eine alte, unübersichtliche Datei auf deinem Gerät sinnvoll um.", "Verschiebe drei beliebige Dateien per Drag & Drop in einen deiner neuen Unterordner.", "Finde den digitalen 'Papierkorb' auf deinem Desktop und leere ihn aus."]
+                missions: [
+                    "Drücke die Tasten `Win + E`, um den Explorer zu öffnen, und erstelle einen neuen Hauptordner namens 'Schule' (lokal oder im OneDrive).",
+                    "Erstelle in deinem neuen Ordner 'Schule' drei weitere Unterordner für deine Lieblingsfächer.",
+                    "Suche eine alte Datei auf deinem Computer (oder erstelle ein leeres Word-Dokument) und benenne sie perfekt nach den Profi-Regeln um (mit Datum und Fach!).",
+                    "Markiere eine beliebige Test-Datei, nutze `Strg + X` zum Ausschneiden und füge sie in einem anderen Ordner mit `Strg + V` wieder ein.",
+                    "Markiere die verschobene Test-Datei, drücke die `Entf` Taste, suche sie danach im 'Papierkorb' und leere diesen komplett aus."
+                ]
             },
             3: {
                 sections: [
